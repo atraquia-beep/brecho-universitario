@@ -299,8 +299,8 @@ function primeiraVez() {
     email.addEventListener('keydown', e => { if (e.key === 'Enter') pedir(); });
     passo = [
       frase('Oi. O Take It é o brechó do campus de Limeira, só entre alunos.'),
-      frase('As peças entram todas juntas, ' + d.dias.map(n => Logica.DIAS_DA_SEMANA[n]).join(' e ') + ', às ' + d.hora + 'h. São '
-        + d.duracaoMs / 60000 + ' minutos. Quem tocar primeiro leva.'),
+      frase('As peças novas entram juntas, ' + d.dias.map(n => Logica.DIAS_DA_SEMANA[n]).join(' e ') + ', às ' + d.hora
+        + 'h. Quem tocar primeiro leva. A arara fica sempre aberta.'),
       frase('Meu e-mail da Unicamp é ', email, '.'), aviso,
       principal('Receber o código', pedir),
       apoio('Sem senha. Mando um código de quatro dígitos para esse e-mail.'),
@@ -360,7 +360,8 @@ function botaoPalavra(texto, aoTocar) {
 
 const pilhaAtual = () => Logica.ordenarPilha(DADOS.CATALOGO, estado.perfil, estado.pedido, Logica.foraDaPilha(estado));
 const feminina = peca => DADOS.TIPOS[peca.tipo].genero === 'f';
-const pecaPorId = id => DADOS.CATALOGO.find(p => p.id === id);
+const pecaPorId = id => DADOS.CATALOGO.concat(DADOS.ARARA).find(p => p.id === id);
+const daArara = id => DADOS.ARARA.some(p => p.id === id);
 
 // nós que ficam acima do rótulo: reservas por retirar, "não entendi" e o pedido anotado
 function avisosDaEspera() {
@@ -435,8 +436,12 @@ function telaEspera(sit) {
   acordar.classList.add('final');
   const vender = Object.assign(document.createElement('a'), { className: 'palavra', href: '#/vender', textContent: 'vender uma peça para este drop' });
   const ensaiar = botaoPalavra('ensaiar o drop agora', ensaiarAgora);
+  const naArara = pilhaDaArara(true).length;
+  const regra = frase('Cada peça é única. Quem tocar primeiro leva. ', ...(naArara
+    ? ['Não quer esperar? A ', linkDaArara(), ' fica sempre aberta, com ' + Logica.extenso(naArara, 'f') + (naArara === 1 ? ' peça' : ' peças') + ' agora.']
+    : ['A ', linkDaArara(), ', sempre aberta, está vazia agora.']));
   return [
-    lado('palco', ...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, frase('Cada peça é única. Quem tocar primeiro leva.')),
+    lado('palco', ...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, regra),
     lado('painel', fotos),
     lado('pe', acordar, apoio(DADOS.DROP.esperando + ' alunos esperando · ', vender, ' · ', ensaiar)),
   ];
@@ -466,19 +471,20 @@ function fantasma(lado) {
   camada.appendChild(f);
 }
 
-// Toda saída de peça passa por aqui.
+// Toda saída de peça passa por aqui. Na arara, passar só vale para esta visita: nada é gravado.
 function passarPeca() {
   fantasma('esquerda');
   const comFoco = document.activeElement && document.activeElement.id === 'passo';
-  mudar(Logica.passar(estado, pecaNaTela.id));
-  const passo = document.getElementById('passo');
-  if (comFoco && passo) passo.focus();
+  if (rotaAtual() === 'arara') { araraPassadas.push(pecaNaTela.id); desenhar(); }
+  else mudar(Logica.passar(estado, pecaNaTela.id));
+  const alvo = document.getElementById('passo') || document.getElementById('arara-fim');
+  if (comFoco && alvo) alvo.focus();
 }
 function pegarPeca() {
   const peca = pecaNaTela;
   fantasma('direita');
-  // reservar devolve o mesmo estado se a peça já é sua: o toque duplo não cria outra reserva
-  guardar(Logica.reservar(estado, peca, Logica.janelasDeRetirada(new Date())[0], Logica.gerarCodigo(), estado.drop.inicio));
+  // reservar devolve o mesmo estado se a peça já é sua: o toque duplo não cria outra reserva. Peça da arara não pertence a drop nenhum.
+  guardar(Logica.reservar(estado, peca, Logica.janelasDeRetirada(new Date())[0], Logica.gerarCodigo(), rotaAtual() === 'arara' ? null : estado.drop.inicio));
   location.hash = '#/sua/' + peca.id;
 }
 
@@ -522,46 +528,51 @@ function arrastavel(cartao, carimbo) {
   cartao.addEventListener('pointercancel', e => soltar(e, false));
 }
 
-function telaNoAr(sit) {
-  const pilha = pilhaAtual(), peca = pilha[0], perfil = estado.perfil;
+// A peça em tela cheia, com a folha embaixo (no computador, ao lado). Serve ao drop e à arara: "meio" entra antes das ações, "fim" depois.
+function secaoDaPeca(rotulo, peca, proxima, pilulas, meio, fim) {
   pecaNaTela = peca;
-  if (pilha[1]) new Image().src = pilha[1].foto; // a próxima já chega carregada
+  if (proxima) new Image().src = proxima.foto; // a próxima já chega carregada
   const img = el('img', { id: 'peca', src: peca.foto, alt: peca.alt, draggable: false });
   const carimbo = el('span', { className: 'carimbo', hidden: true });
   carimbo.setAttribute('aria-hidden', 'true');
   const cartao = el('div', { className: 'cartao' });
   cartao.append(img, carimbo);
   arrastavel(cartao, carimbo);
-  const pilulas = el('div', { className: 'pilulas' });
-  pilulas.append(el('span', { id: 'resta', className: 'pilula', textContent: 'AO VIVO · ' + Logica.relogio(sit.faltaMs) }),
-    el('span', { className: 'pilula', textContent: DADOS.DROP.online + ' online' }));
+  const topo = el('div', { className: 'pilulas' });
+  topo.append(...pilulas);
   const foto = el('div', { className: 'foto' });
-  foto.append(cartao, pilulas);
-
-  const linhas = [frase(peca.nome + ', ' + peca.tamanho + ', ' + (feminina(peca) ? peca.estado.replace(/^(usad|nov)o/, '$1a') : peca.estado) + '. ' + Logica.dinheiro(peca.preco) + '.'),
-    el('p', { id: 'sobre', className: 'apoio', textContent: sobrePeca(peca) })];
-  if (estado.pedido && Logica.buscar([peca], Logica.entenderPedido(estado.pedido, perfil), []).length) {
-    linhas.push(apoio('Você pediu: ' + estado.pedido)); // texto da pessoa: só textContent
-  }
-  const aviso = el('div', { id: 'aviso', hidden: true });
-  aviso.setAttribute('aria-live', 'polite');
+  foto.append(cartao, topo);
   const passo = botaoPalavra('passo', passarPeca);
   passo.id = 'passo';
   const acoes = el('div', { className: 'acoes' });
   acoes.append(passo, principal('É minha', pegarPeca));
+  const teclas = apoio('No teclado: ← passa, → é minha.');
+  teclas.classList.add('largo');
+  const folha = el('div', { className: 'folha' });
+  folha.append(frase(peca.nome + ', ' + peca.tamanho + ', ' + (feminina(peca) ? peca.estado.replace(/^(usad|nov)o/, '$1a') : peca.estado) + '. ' + Logica.dinheiro(peca.preco) + '.'),
+    el('p', { id: 'sobre', className: 'apoio', textContent: sobrePeca(peca) }), ...meio, acoes, ...fim, teclas);
+  const secao = el('section', { id: 'drop' });
+  secao.setAttribute('aria-label', rotulo);
+  secao.append(foto, folha);
+  return secao;
+}
+
+function telaNoAr(sit) {
+  const pilha = pilhaAtual(), peca = pilha[0];
+  const meio = [];
+  if (estado.pedido && Logica.buscar([peca], Logica.entenderPedido(estado.pedido, estado.perfil), []).length) {
+    meio.push(apoio('Você pediu: ' + estado.pedido)); // texto da pessoa: só textContent
+  }
+  const aviso = el('div', { id: 'aviso', hidden: true });
+  aviso.setAttribute('aria-live', 'polite');
+  meio.push(aviso);
   const barra = el('div', { id: 'barra', className: 'barra' });
   barra.setAttribute('aria-hidden', 'true');
   const pl = Logica.placar(estado, DADOS.CATALOGO);
   for (let i = 0; i < pl.total; i++) barra.appendChild(el('i', { className: i < pl.foram ? 'f' : '' }));
-  const folha = el('div', { className: 'folha' });
-  const teclas = apoio('No teclado: ← passa, → é minha.');
-  teclas.classList.add('largo');
-  folha.append(...linhas, aviso, acoes, barra, apoio(el('span', { id: 'placar', textContent: placarTexto() })), teclas);
-
-  const drop = el('section', { id: 'drop' });
-  drop.setAttribute('aria-label', 'Drop no ar');
-  drop.append(foto, folha);
-  return [drop];
+  return [secaoDaPeca('Drop no ar', peca, pilha[1],
+    [el('span', { id: 'resta', className: 'pilula', textContent: 'AO VIVO · ' + Logica.relogio(sit.faltaMs) }), el('span', { className: 'pilula', textContent: DADOS.DROP.online + ' online' })],
+    meio, [barra, apoio(el('span', { id: 'placar', textContent: placarTexto() }))])];
 }
 
 function telaFim() {
@@ -570,7 +581,29 @@ function telaFim() {
   return [lado('palco',
     frase('O drop acabou. ' + (n ? 'Você ficou com ' + Logica.extenso(n, 'f') + (n === 1 ? ' peça.' : ' peças.') : 'Você não pegou nada desta vez.')),
     frase('Próximo drop: ' + Logica.diaDaSemana(proximo) + ', ' + DADOS.DROP.hora + 'h.'),
+    frase('Enquanto isso, a ', linkDaArara(), ' continua aberta.'),
     principal('Voltar', () => mudar(Logica.fecharDrop(estado))))];
+}
+
+// ---------- Arara ----------
+// Aberta o tempo todo: uma peça por vez, como no drop, sem relógio e sem ninguém levando nada.
+let araraPassadas = []; // passadas nesta visita; zeram com "olhar de novo", ao recarregar e ao chegar de outra tela que não "é sua"
+const pilhaDaArara = todas => Logica.ordenarPilha(DADOS.ARARA, estado.perfil, null, Logica.indisponiveis(estado).concat(todas ? [] : araraPassadas));
+const linkDaArara = () => el('a', { className: 'palavra', href: '#/arara', textContent: 'arara' });
+
+function telaArara() {
+  const pilha = pilhaDaArara();
+  if (!pilha.length) {
+    pecaNaTela = null;
+    const resta = pilhaDaArara(true).length;
+    const fim = focavel(frase(resta ? 'Você viu a arara inteira.' : 'A arara está vazia agora.'));
+    fim.id = 'arara-fim';
+    const denovo = resta ? [frase('Dá para ', botaoPalavra('olhar de novo', () => { araraPassadas = []; desenhar(); document.getElementById('passo').focus(); }), '.')] : [];
+    return [lado('palco', fim, ...denovo, principal('Voltar', () => { location.hash = '#/'; }))];
+  }
+  return [secaoDaPeca('Arara', pilha[0], pilha[1],
+    [el('span', { className: 'pilula', textContent: 'Arara · sempre aberta' }), el('span', { className: 'pilula', textContent: pilha.length + (pilha.length === 1 ? ' peça' : ' peças') })],
+    [], [apoio(el('a', { className: 'palavra', href: '#/', textContent: 'voltar' }))])];
 }
 
 function telaPrincipal() {
@@ -616,7 +649,7 @@ function telaSua() {
   const acao = noAr ? principal('Voltar ao drop', voltar)
     : principal('Já retirei', () => { comoFoi = id; desenhar(); document.getElementById('como-foi').focus(); });
   const cancelar = botaoPalavra('Cancelar a reserva', () => { guardar(Logica.cancelarReserva(estado, id)); voltar(); });
-  const fundo = apoio('Mudou de ideia? ', cancelar, '.');
+  const fundo = apoio(...(daArara(id) ? [el('a', { className: 'palavra', href: '#/arara', textContent: 'continuar na arara' }), ' · '] : []), 'Mudou de ideia? ', cancelar, '.');
   fundo.classList.add('final');
   return [
     lado('palco', frase((f ? 'É sua. A ' : 'É seu. O ') + peca.nome.toLowerCase() + ' d' + v.artigo + ' ' + v.nome + ' espera você ', janela, ', no ponto da FCA. Mostre este código:'),
@@ -816,12 +849,12 @@ function telaVoce() {
   const fim = apagando ? [frase('Apagar tudo e começar de novo?'), frase(botaoPalavra('sim', recomecar), ' ou ', nao, '.')] : [apoio(recomeco)];
   return [
     lado('palco', ...frasesDoPerfil(estado.perfil, aoMudar),
-      frase('Você tem ' + din(estado.creditos) + ' em créditos.'),
-      frase('A cor do seu brechó é ', amostra, '.')),
+      frase('Você tem ' + din(estado.creditos) + ' em créditos.')),
     lado('painel', rotulo('Suas peças'), ...pecas,
       rotulo('Suas reservas'), ...(reservas.length ? reservas : [frase('Nenhuma reserva por enquanto.')]),
       ...(estado.ultimoAnuncioSeg != null ? [frase('Seu último anúncio levou ' + estado.ultimoAnuncioSeg + ' s.')] : [])),
-    lado('pe', apoio(botaoPalavra('ensaiar o drop agora', ensaiarAgora)), ...fim),
+    // no celular a cor vem depois das reservas, como sempre foi; no computador fica embaixo do perfil
+    lado('pe', frase('A cor do seu brechó é ', amostra, '.'), apoio(botaoPalavra('ensaiar o drop agora', ensaiarAgora)), ...fim),
   ];
 }
 
@@ -874,7 +907,7 @@ function abertura() {
 
 // ---------- Rotas ----------
 const rotas = { '': { escura: true, tela: telaPrincipal }, sua: { escura: false, tela: telaSua }, vender: { escura: true, tela: telaVender },
-  voce: { escura: false, tela: telaVoce } };
+  voce: { escura: false, tela: telaVoce }, arara: { escura: true, tela: telaArara } };
 let ultimaVista = null; // a entrada animada só toca quando a vista muda (rota, tela principal ou peça do drop)
 
 function desenhar() {
@@ -894,13 +927,15 @@ function desenhar() {
   const comPedido = principalNa('espera');
   document.getElementById('pedido').hidden = !comPedido;
   document.body.classList.toggle('com-pedido', comPedido);
-  document.body.classList.toggle('ao-vivo', principalNa('no-ar'));
+  // a peça em tela cheia (drop ou arara) põe o topo claro sobre a foto
+  document.body.classList.toggle('ao-vivo', nos.some(n => n.id === 'drop'));
   document.body.classList.toggle('vendendo', rota === rotas.vender);
   document.body.classList.toggle('entrada', !estado.perfil);
   // o passo dentro da rota também é vista nova; trocar uma palavra no mesmo passo, não
   const reserva = rota === rotas.sua && estado.reservas.find(x => x.pecaId === location.hash.split('/')[2]);
   const vista = (estado.perfil ? parte : 'primeira') + '|' + (rota === rotas[''] ? ultimaTela + (ultimaTela === 'no-ar' ? pecaNaTela.id : '')
-    : rota === rotas.vender ? venda.passo : reserva ? comoFoi + '|' + reserva.retirada : '');
+    : rota === rotas.vender ? venda.passo : rota === rotas.arara ? (pecaNaTela ? pecaNaTela.id : 'vazia')
+    : reserva ? comoFoi + '|' + reserva.retirada : '');
   // o drop abriu na frente da pessoa: a cortina na cor dela marca a virada
   if (rota === rotas[''] && telaAntes === 'espera' && ultimaTela === 'no-ar' && !document.getElementById('abertura')) cortina('ao-vivo', 'AO VIVO');
   tela.classList.toggle('entra', vista !== ultimaVista);
@@ -959,7 +994,12 @@ function tique() {
 }
 
 // ---------- Partida ----------
-window.addEventListener('hashchange', () => { comoFoi = null; apagando = false; desenhar(); });
+window.addEventListener('hashchange', e => {
+  comoFoi = null; apagando = false;
+  // a arara lembra as peças passadas só no vai e volta com "é sua"
+  if (rotaAtual() === 'arara' && (e.oldURL.split('#')[1] || '').replace(/^\/?/, '').split('/')[0] !== 'sua') araraPassadas = [];
+  desenhar();
+});
 document.addEventListener('keydown', e => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
   if (e.altKey || e.ctrlKey || e.metaKey || e.repeat) return; // Alt+seta é o voltar do navegador

@@ -28,6 +28,11 @@ test('tela larga: a entrada tem o palco preto à esquerda e o painel creme à di
     await semRolagem(page, onde + ' código', true);
     await page.getByLabel('Dígito 1 de 4').fill('4815'); await page.getByLabel('Seu nome').waitFor();
     await semRolagem(page, onde + ' perfil', true);
+    // abrir uma lista do perfil empurra o que vem embaixo; a frase de cima não sai do lugar sob o cursor
+    const topoDaFrase = () => caixa(page, '.painel .frase').then(c => c.t), antes = await topoDaFrase();
+    await page.getByRole('button', { name: /^Pegada:/ }).click();
+    assert.equal(await topoDaFrase(), antes, onde + ': a frase pulou ao abrir a pegada');
+    await page.getByRole('button', { name: 'pronto' }).click();
     await page.getByRole('button', { name: /^Curso:/ }).click(); // a lista de cursos é longa: pode rolar para baixo, nunca para o lado
     await semRolagem(page, onde + ' perfil com a lista aberta');
     await fechar();
@@ -80,6 +85,20 @@ test('tela larga: espera, vender, drop, é sua e você, lado a lado e sem rolage
   assert.ok((await caixa(page, '.painel')).e >= (await caixa(page, '.palco')).d);
   assert.ok((await page.locator('.painel').innerText()).toUpperCase().startsWith('SUAS PEÇAS'));
   await semRolagem(page, 'você', true);
+  await fechar();
+});
+test('janela de 1920: no drop e na câmera o topo fica nas bordas da janela, como a foto e o visor', async () => {
+  const { page, passar, fechar } = await abrir({ largura: 1920, altura: 1080 }); await entrar(page);
+  const bordas = async () => { const t = await caixa(page, '.topo'); return [t.e, 1920 - t.d]; }; // na câmera a conta dá lugar ao cronômetro: mede o topo inteiro
+  // na espera o corpo continua no meio, com 1440 px
+  assert.deepEqual(await bordas(), [280, 280]);
+  await semRolagem(page, 'espera 1920', true);
+  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.getByRole('button', { name: 'Fotografar' }).waitFor();
+  assert.deepEqual(await bordas(), [40, 40]);
+  await page.locator('#marca').click(); await aoVivo(page, passar);
+  assert.deepEqual(await bordas(), [40, 40]);
+  assert.equal((await caixa(page, '.pilulas')).e, 40); // o cabide fica alinhado às pílulas da foto
   await fechar();
 });
 test('celular: os lados não existem, o que é só da tela larga some e a fila segue a ordem de sempre', async () => {

@@ -120,10 +120,8 @@ p { margin: 0 0 16px; }
 .teaser span { position: absolute; left: 0; right: 0; top: 52px; width: max-content; margin: 0 auto; padding: 6px 10px; border-radius: 99px; background: rgba(0, 0, 0, .82); font-size: 11px; font-weight: 500; line-height: 1.2; text-transform: uppercase; letter-spacing: .04em; color: var(--creme); }
 /* tela baixa (celular com as barras do navegador à mostra): o teaser e o botão encolhem para as ações ficarem acima do campo do pedido */
 @media (max-height: 700px) and (max-width: 899px) {
-  .teaser { height: 48px; }
-  .teaser img { height: 44px; }
-  .teaser img:nth-child(n) { top: 2px; }
-  .teaser span { top: 11px; }
+  /* celular baixo: as peças borradas saem para a frase da arara caber e as ações da espera ficarem acima do campo do pedido */
+  .teaser { display: none; }
   .principal { min-height: 46px; }
   .regua { margin: 10px 0 12px; }
 }
@@ -169,6 +167,7 @@ body.ao-vivo #marca, body.ao-vivo #conta { color: var(--creme); }
 .acoes .palavra { font-size: 20px; padding: 12px 0; }
 .acoes .principal { flex: 1; width: auto; margin: 0 0 0 22px; min-height: 58px; font-size: 20px; }
 .barra { display: flex; gap: 5px; margin: 16px 0 8px; }
+.acoes + .apoio { margin-top: 14px; } /* na arara não há barra: o "voltar" desgruda do botão */
 .barra i { flex: 1; height: 3px; background: #3A3532; }
 .barra i.f { background: var(--creme); }
 #aviso { position: absolute; left: 16px; right: 16px; bottom: 100%; margin-bottom: 14px; background: var(--creme); color: #000; padding: 10px 12px; font-size: 17px; line-height: 1.25; }
@@ -281,7 +280,8 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   /* Entrada: palco preto, painel creme até a borda da janela (a sombra não cria rolagem; o recorte a segura no meio do vão) */
   body.entrada .painel {
     --fundo: var(--creme); --tinta: var(--preto); --apoio: #655C56; --traco: #A1968F; --realce: var(--cor);
-    justify-content: center; padding-left: 28px; color: var(--tinta); background: var(--creme);
+    /* começa no alto, numa altura que centra o passo do e-mail: abrir uma lista do perfil só empurra para baixo, nada pula sob o cursor */
+    justify-content: flex-start; padding-top: max(0px, calc((100vh - 640px) / 2)); padding-left: 28px; color: var(--tinta); background: var(--creme);
     box-shadow: 0 0 0 100vmax var(--creme); clip-path: inset(-100vmax -100vmax -100vmax -28px);
   }
   .digito { width: 72px; height: 88px; font-size: 52px; }
@@ -327,4 +327,8 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   /* Abertura */
   .ab-pilha img { left: -115px; top: -165px; width: 230px; height: 307px; }
   .ab-conta { font-size: 26px; }
+}
+/* Acima de 1440 px o corpo fica no meio, mas a peça e o visor ocupam a janela toda: o topo acompanha as bordas da janela */
+@media (min-width: 1441px) {
+  body.ao-vivo .topo, body.vendendo .topo { position: fixed; top: 30px; left: 40px; right: 40px; }
 }

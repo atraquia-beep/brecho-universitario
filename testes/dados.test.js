@@ -3,7 +3,9 @@ const D = require('../dados.js'); const raiz = path.join(__dirname, '..');
 test('catálogo íntegro', () => {
   assert.equal(D.CATALOGO.length, 14);
   assert.equal(new Set(D.CATALOGO.map(p => p.id)).size, 14);
-  for (const p of D.CATALOGO) {
+  // a arara tem peças próprias, no mesmo formato, que nunca repetem uma do drop
+  assert.equal(D.ARARA.length, 5); assert.equal(new Set(D.CATALOGO.concat(D.ARARA).map(p => p.id)).size, 19);
+  for (const p of D.CATALOGO.concat(D.ARARA)) {
     assert.ok(fs.statSync(path.join(raiz, p.foto)).size < 200_000, p.foto);
     assert.ok(D.TIPOS[p.tipo] && D.TAMANHOS.includes(p.tamanho) && D.ESTADOS.includes(p.estado), p.id);
     assert.ok(Number.isInteger(p.preco) && p.preco >= 10 && p.preco <= 80, p.id);
@@ -36,4 +38,4 @@ test('distribuição que o roteiro precisa', () => {
   assert.deepEqual([rafa.nome, rafa.preco, rafa.estado, rafa.pegadas, rafa.vendedor.nome, rafa.vendedor.artigo], ['Blazer preto', 38, 'pouco uso', ['social'], 'Rafa', 'o']);
   assert.deepEqual([carol.preco, carol.pegadas], [30, ['social']]);
 });
-test('créditos das fotos', () => { const c = fs.readFileSync(path.join(raiz, 'fotos/CREDITOS.md'), 'utf8'); for (const p of D.CATALOGO) assert.ok(c.includes(path.basename(p.foto)), p.foto); });
+test('créditos das fotos', () => { const c = fs.readFileSync(path.join(raiz, 'fotos/CREDITOS.md'), 'utf8'); for (const p of D.CATALOGO.concat(D.ARARA)) assert.ok(c.includes(path.basename(p.foto)), p.foto); });

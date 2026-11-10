@@ -15,7 +15,9 @@ const DADOS = {
     'camisa social': { artigo: 'uma', genero: 'f', sinonimos: ['camisa', 'social'], faixa: [20, 30] },
     'camisa xadrez': { artigo: 'uma', genero: 'f', sinonimos: ['camisa', 'xadrez'], faixa: [20, 30] },
     'vestido': { artigo: 'um', genero: 'm', sinonimos: ['vestidinho'], faixa: [35, 50] },
-    'calça jeans': { artigo: 'uma', genero: 'f', sinonimos: ['calca', 'jeans'], faixa: [30, 40] }
+    'calça jeans': { artigo: 'uma', genero: 'f', sinonimos: ['calca', 'jeans'], faixa: [30, 40] },
+    'suéter': { artigo: 'um', genero: 'm', sinonimos: ['sueter', 'trico', 'malha'], faixa: [25, 40] },
+    'jaqueta bomber': { artigo: 'uma', genero: 'f', sinonimos: ['jaqueta', 'bomber'], faixa: [35, 50] }
   },
   OCASIOES: {
     entrevista: ['blazer', 'camisa social', 'calça jeans'],
@@ -38,6 +40,14 @@ const DADOS = {
     { id: 'moletom-azul-bruna', tipo: 'moletom', nome: 'Moletom azul', tamanho: 'G', preco: 32, estado: 'usado', pegadas: ['street', 'esportivo'], foto: 'fotos/moletom-azul.jpg', alt: 'Moletom azul desbotado com capuz, aberto no chão de madeira ao lado de uma calça jeans escura', vendedor: { nome: 'Bruna', artigo: 'a', curso: 'Ciências do Esporte', nota: 4.5, vendas: 4 } },
     { id: 'calca-jeans-escura-gabi', tipo: 'calça jeans', nome: 'Calça jeans escura', tamanho: 'G', preco: 38, estado: 'pouco uso', pegadas: ['básico'], foto: 'fotos/calca-jeans-escura.jpg', alt: 'Calça jeans azul escura dobrada sobre fundo cinza claro', vendedor: { nome: 'Gabi', artigo: 'a', curso: 'Engenharia de Manufatura', nota: 4.3, vendas: 2 } },
     { id: 'moletom-branco-marina', tipo: 'moletom', nome: 'Moletom branco', tamanho: 'GG', preco: 45, estado: 'pouco uso', pegadas: ['básico'], foto: 'fotos/moletom-branco.jpg', alt: 'Moletom branco com capuz num cabide, ao lado de uma calça jeans clara rasgada', vendedor: { nome: 'Marina', artigo: 'a', curso: 'Engenharia de Produção', nota: 4.8, vendas: 11 } }
+  ],
+  // A arara fica aberta o tempo todo: peças que não dependem do drop. Mesmo formato do CATALOGO.
+  ARARA: [
+    { id: 'bomber-terracota-tiago', tipo: 'jaqueta bomber', nome: 'Jaqueta bomber terracota', tamanho: 'M', preco: 40, estado: 'pouco uso', pegadas: ['street'], foto: 'fotos/jaqueta-bomber.jpg', alt: 'Jaqueta bomber cor de terracota num cabide branco, segurada por uma mão contra uma parede clara', vendedor: { nome: 'Tiago', artigo: 'o', curso: 'Engenharia de Produção', nota: 4.7, vendas: 6 } },
+    { id: 'sueter-marinho-helena', tipo: 'suéter', nome: 'Suéter azul-marinho', tamanho: 'M', preco: 30, estado: 'pouco uso', pegadas: ['vintage', 'básico'], foto: 'fotos/sueter-marinho.jpg', alt: 'Suéter de tricô azul-marinho num cabide de madeira, contra um fundo preto', vendedor: { nome: 'Helena', artigo: 'a', curso: 'Nutrição', nota: 4.9, vendas: 15 } },
+    { id: 'jaqueta-jeans-cinza-murilo', tipo: 'jaqueta jeans', nome: 'Jaqueta jeans cinza', tamanho: 'G', preco: 32, estado: 'usado', pegadas: ['vintage', 'street'], foto: 'fotos/jaqueta-jeans-cinza.jpg', alt: 'Jaqueta jeans com a manga dobrada, pendurada num gancho de parede, em preto e branco', vendedor: { nome: 'Murilo', artigo: 'o', curso: 'Sistemas de Informação', nota: 4.5, vendas: 4 } },
+    { id: 'sueter-creme-sofia', tipo: 'suéter', nome: 'Suéter creme', tamanho: 'P', preco: 28, estado: 'pouco uso', pegadas: ['básico'], foto: 'fotos/sueter-creme.jpg', alt: 'Suéter creme de tricô felpudo num cabide branco, ao lado de uma cortina clara', vendedor: { nome: 'Sofia', artigo: 'a', curso: 'Administração Pública', nota: 4.8, vendas: 9 } },
+    { id: 'camisa-manga-curta-iara', tipo: 'camisa social', nome: 'Camisa branca de manga curta', tamanho: 'M', preco: 20, estado: 'usado', pegadas: ['social', 'básico'], foto: 'fotos/camisa-manga-curta.jpg', alt: 'Camisa branca de manga curta num cabide, pendurada na porta de um armário de madeira', vendedor: { nome: 'Iara', artigo: 'a', curso: 'Engenharia Ambiental', nota: 4.6, vendas: 7 } }
   ],
   PALPITES: [{ tipo: 'jaqueta jeans', estado: 'pouco uso' }, { tipo: 'moletom', estado: 'usado' }, { tipo: 'vestido', estado: 'pouco uso' }],
   COMPRADOR: { nome: 'Bia', artigo: 'a', curso: 'Nutrição' },

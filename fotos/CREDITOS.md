@@ -15,3 +15,8 @@
 - calca-jeans-escura.jpg: https://images.unsplash.com/photo-1714143164072-7646ef5cb24d (licença Unsplash)
 - vestido-renda.jpg: https://images.unsplash.com/photo-1534875756527-5e8e4392005f (licença Unsplash)
 - exemplo-venda.jpg: https://images.unsplash.com/photo-1611312449408-fcece27cdbb7 (licença Unsplash)
+- jaqueta-bomber.jpg: https://images.unsplash.com/photo-1591047139829-d91aecb6caea (licença Unsplash)
+- sueter-marinho.jpg: https://images.unsplash.com/photo-1611312449297-a69dc9c3987b (licença Unsplash)
+- jaqueta-jeans-cinza.jpg: https://images.unsplash.com/photo-1698640058182-60c873f20553 (licença Unsplash)
+- sueter-creme.jpg: https://images.unsplash.com/photo-1773747310674-b42a55d72003 (licença Unsplash)
+- camisa-manga-curta.jpg: https://images.unsplash.com/photo-1621773881532-fe65715b5137 (licença Unsplash)

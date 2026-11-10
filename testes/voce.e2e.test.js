@@ -5,6 +5,9 @@ test('mudar o perfil em Você muda a espera', async () => {
   await page.getByText(/Você tem R\$\s0 em créditos\./).waitFor();
   assert.equal(await page.evaluate(() => document.body.classList.contains('escuro')), false);
   await page.getByText('Você ainda não anunciou nada.').waitFor(); await page.getByText('Nenhuma reserva por enquanto.').waitFor();
+  // no celular a ordem de leitura é a de sempre: créditos, peças, reservas, e só então a cor e o ensaio
+  const texto = (await page.locator('#tela').innerText()).toLowerCase(), em = t => texto.indexOf(t);
+  assert.ok(em('em créditos') < em('suas peças') && em('nenhuma reserva') < em('a cor do seu brechó') && em('a cor do seu brechó') < em('ensaiar o drop agora'), texto);
   await page.getByRole('button', { name: /^Tamanho:/ }).click(); await page.getByRole('button', { name: 'GG', exact: true }).click();
   await page.locator('#marca').click();
   await page.getByText(/(são|é) GG,? na sua pegada/).waitFor();
