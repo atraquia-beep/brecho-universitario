@@ -29,10 +29,21 @@ body {
 /* toques seguidos ("passo", "passo"…) não dão zoom no iPhone */
 .palavra, .principal, #disparo, #pedido button, .topo a { touch-action: manipulation; }
 
-.topo { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 #marca { color: var(--tinta); display: block; }
 #marca svg { width: 36px; height: 28px; display: block; }
-#conta { font-size: 13px; font-weight: 400; line-height: 1.45; letter-spacing: 0; color: var(--apoio); text-decoration: none; }
+#conta { margin-left: auto; font-size: 13px; font-weight: 400; line-height: 1.45; letter-spacing: 0; color: var(--apoio); text-decoration: none; }
+/* a arara a um toque, no canto de cima; sai na câmera e nas telas de foto (o drop e a própria arara) */
+#ir-arara {
+  margin-left: 14px; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px;
+  border: 1px solid currentColor; border-radius: 999px; color: var(--tinta);
+  font-size: 13px; font-weight: 500; line-height: 1; letter-spacing: 0; text-decoration: none;
+}
+#ir-arara span {
+  min-width: 20px; height: 20px; margin-right: -7px; padding: 0 6px; border-radius: 10px;
+  background: var(--tinta); color: var(--fundo); font-size: 12px; line-height: 20px; text-align: center;
+}
+#ir-arara span:empty, body.ao-vivo #ir-arara { display: none; }
 #tela { flex: 1; display: flex; flex-direction: column; }
 
 p { margin: 0 0 16px; }
@@ -266,7 +277,8 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   body.com-pedido { padding-bottom: 30px; }
   .largo { display: block; }
   #marca svg { width: 44px; height: 34px; }
-  #conta, .apoio { font-size: 14px; }
+  #conta, #ir-arara, .apoio { font-size: 14px; }
+  #ir-arara { min-height: 36px; }
   .lab { font-size: 12px; }
   .principal { min-height: 62px; font-size: 19px; padding: 0 20px; }
   .opcoes { font-size: 20px; }

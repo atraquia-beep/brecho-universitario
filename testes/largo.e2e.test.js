@@ -111,6 +111,7 @@ test('celular: os lados não existem, o que é só da tela larga some e a fila s
   assert.equal(await css(page, '#pedido', 'position'), 'fixed');
   await page.getByRole('link', { name: 'vender uma peça para este drop' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor();
   assert.equal(await page.getByText('Fotografe a peça. Eu digo o que é e sugiro o preço.').isVisible(), false);
+  assert.equal(await page.locator('#ir-arara').isVisible(), false); // na câmera o cronômetro ocupa o canto
   await page.locator('#marca').click();
   await aoVivo(page, passar);
   assert.equal(await page.getByText('No teclado: ← passa, → é minha.').isVisible(), false);

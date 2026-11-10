@@ -27,7 +27,7 @@ Protótipo do brechó digital universitário para o vídeo do MVP de MG900 – E
 É o mesmo roteiro do teste `testes/roteiro.e2e.test.js`, na mesma ordem. Anote o pedido do blazer **antes** de vender: assim a jaqueta do catálogo não aparece na hora em que a Bia leva a sua.
 
 1. A abertura passa sozinha e cai na capa preta, com "TAKE IT" de ponta a ponta. A entrada tem três passos. **E-mail**: escreva um e-mail `@dac.unicamp.br` e toque em **Receber o código**. **Código**: digite quatro dígitos quaisquer; as células giram, se juntam e viram o visto. **Você**: preencha a frase (nome Deco, tamanho M, vintage e street, até R$ 40, Administração) e toque em **Entrar**.
-2. A espera mostra a contagem, "Deco, catorze peças entram juntas. Cinco são M, na sua pegada." e, logo abaixo, "Não quer esperar? A arara fica sempre aberta, com cinco peças agora."
+2. A espera mostra a contagem e "Deco, catorze peças entram juntas. Cinco são M, na sua pegada." No canto de cima, à direita, fica o botão **Arara**, com o número de peças.
 3. No campo de baixo, escreva "um blazer para a entrevista de quinta" e envie. Aparece "Anotado: …".
 4. Toque em **vender uma peça para este drop**. O app abre na câmera e o cronômetro corre no topo.
 5. Aponte a câmera para uma jaqueta jeans (o primeiro palpite é sempre "jaqueta jeans, pouco uso") e toque no botão redondo para fotografar. Com foto de verdade, o palpite muda a cada anúncio novo, a não ser que você recomece do zero; a peça de exemplo sempre ganha o palpite da jaqueta. Depois de "Olhando…", o app sugere tipo, tamanho, estado e preço; toque em **Anunciar no drop**.
@@ -42,7 +42,7 @@ Protótipo do brechó digital universitário para o vídeo do MVP de MG900 – E
 
 ### Mostrar a arara (opcional)
 
-A arara é a loja aberta o tempo todo: cinco peças próprias, uma por vez, como no drop, mas sem relógio e sem ninguém levando nada. Na espera, toque em **arara**. Passe a primeira peça (**passo** ou arraste para a esquerda) e pegue a segunda (**É minha**): a tela "É seu" mostra a retirada e o código, como no drop. **continuar na arara** volta para as peças que faltam. Quem passa a arara inteira vê "Você viu a arara inteira." e pode **olhar de novo**. Faça isso antes do passo 7 ou depois do passo 12; durante o drop a arara também abre, mas o roteiro fica mais limpo sem ela.
+A arara é a loja aberta o tempo todo: cinco peças próprias, uma por vez, como no drop, mas sem relógio e sem ninguém levando nada. Toque em **Arara**, no canto de cima à direita. Passe a primeira peça (**passo** ou arraste para a esquerda) e pegue a segunda (**É minha**): a tela "É seu" mostra a retirada e o código, como no drop. **continuar na arara** volta para as peças que faltam. Quem passa a arara inteira vê "Você viu a arara inteira." e pode **olhar de novo**. Faça isso antes do passo 7 ou depois do passo 12. Durante o drop, na câmera e dentro da própria arara o botão sai do topo, para a atenção ficar na peça.
 
 ## Como regravar
 

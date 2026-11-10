@@ -27,9 +27,13 @@ function aplicarRealce() {
 }
 
 function atualizarConta() {
-  const conta = document.getElementById('conta');
-  conta.hidden = !estado.perfil || !!venda; // em #/vender o cronômetro ocupa o lugar
+  const conta = document.getElementById('conta'), arara = document.getElementById('ir-arara');
+  conta.hidden = arara.hidden = !estado.perfil || !!venda; // em #/vender o cronômetro ocupa o lugar
   conta.textContent = estado.perfil ? estado.perfil.nome + ' · ' + Logica.dinheiro(estado.creditos) + ' em créditos' : '';
+  // o número da arara acompanha as reservas: toda mudança de estado passa por aqui (guardar)
+  const n = estado.perfil ? pilhaDaArara(true).length : 0;
+  arara.lastChild.textContent = n || '';
+  arara.setAttribute('aria-label', n ? 'Arara, ' + n + (n === 1 ? ' peça' : ' peças') : 'Arara');
 }
 
 // troca o estado e grava, sem reconstruir a tela (o tique usa esta)
@@ -436,12 +440,8 @@ function telaEspera(sit) {
   acordar.classList.add('final');
   const vender = Object.assign(document.createElement('a'), { className: 'palavra', href: '#/vender', textContent: 'vender uma peça para este drop' });
   const ensaiar = botaoPalavra('ensaiar o drop agora', ensaiarAgora);
-  const naArara = pilhaDaArara(true).length;
-  const regra = frase('Cada peça é única. Quem tocar primeiro leva. ', ...(naArara
-    ? ['Não quer esperar? A ', linkDaArara(), ' fica sempre aberta, com ' + Logica.extenso(naArara, 'f') + (naArara === 1 ? ' peça' : ' peças') + ' agora.']
-    : ['A ', linkDaArara(), ', sempre aberta, está vazia agora.']));
   return [
-    lado('palco', ...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, regra),
+    lado('palco', ...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, frase('Cada peça é única. Quem tocar primeiro leva.')),
     lado('painel', fotos),
     lado('pe', acordar, apoio(DADOS.DROP.esperando + ' alunos esperando · ', vender, ' · ', ensaiar)),
   ];
