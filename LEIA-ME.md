@@ -10,7 +10,9 @@ Protótipo para o vídeo do MVP de MG900 – Empreendedorismo. É um site estát
 
 ## Antes de gravar
 
-- Abra o link uma vez com internet, para as fotos e as fontes ficarem carregadas.
+- Abra o link uma vez com internet, para as fotos e a fonte ficarem carregadas.
+- A abertura ("BRECHÓ" subindo sobre as fotos, com o contador até 100) roda sozinha por uns 4 segundos toda vez que a página é aberta ou recarregada. Um toque pula. Para a tomada começar por ela, recarregue a página com a gravação já rodando.
+- Se o celular estiver com **Reduzir movimento** ligado (Acessibilidade), o app não mostra a abertura, a cortina "AO VIVO" nem as entradas animadas. Desligue para gravar.
 - Abra **vender uma peça para este drop** uma vez e permita a câmera: assim a pergunta de permissão não cai dentro da tomada cronometrada.
 - Faça uma tomada de ensaio inteira e depois, em **Você**, **Recomeçar do zero**.
 - Os dias citados no roteiro ("quarta", "terça") são os de uma gravação numa terça; em outros dias eles mudam. Quando o próximo drop está a dois dias ou mais, a espera mostra os dias em vez do relógio correndo: gravando no domingo, na segunda, na terça ou na quarta (antes das 20h), o relógio corre.
@@ -20,23 +22,23 @@ Protótipo para o vídeo do MVP de MG900 – Empreendedorismo. É um site estát
 
 É o mesmo roteiro do teste `testes/roteiro.e2e.test.js`, na mesma ordem. Anote o pedido do blazer **antes** de vender: assim a jaqueta do catálogo não aparece na hora em que a Bia leva a sua.
 
-1. Na primeira vez, preencha a frase: nome Deco, tamanho M, vintage e street, até R$ 40, Administração e um e-mail `@dac.unicamp.br`. Toque em **Entrar**.
+1. A abertura passa sozinha e cai na capa preta, com "BRECHÓ" de ponta a ponta. Preencha a frase: nome Deco, tamanho M, vintage e street, até R$ 40, Administração e um e-mail `@dac.unicamp.br`. Toque em **Entrar**.
 2. A espera mostra a contagem e "Deco, catorze peças entram juntas. Cinco são M, na sua pegada."
 3. No campo de baixo, escreva "um blazer para a entrevista de quinta" e envie. Aparece "Anotado: …".
 4. Toque em **vender uma peça para este drop**. O app abre na câmera e o cronômetro corre no topo.
 5. Aponte a câmera para uma jaqueta jeans (o primeiro palpite é sempre "jaqueta jeans, pouco uso") e toque no botão redondo para fotografar. Com foto de verdade, o palpite muda a cada anúncio novo, a não ser que você recomece do zero; a peça de exemplo sempre ganha o palpite da jaqueta. Depois de "Olhando…", o app sugere tipo, tamanho, estado e preço; toque em **Anunciar no drop**.
 6. Aparece "No drop em N segundos. Sua jaqueta jeans entra quarta, às 20h." Toque em **Voltar**.
-7. Toque em **ensaiar o drop agora**. Em 10 segundos o drop entra no ar.
+7. Toque em **ensaiar o drop agora**. Em 10 segundos a cortina "AO VIVO" passa na cor do brechó e o drop entra no ar.
 8. A primeira peça é o blazer preto, com "Você pediu: um blazer para a entrevista de quinta".
 9. Espere uns 5 segundos: aparece "A Bia, de Nutrição, levou sua jaqueta jeans. Entraram R$ 35 em créditos."
 10. Toque em **É minha** (ou arraste a foto para a direita). A tela "É seu" mostra a retirada, o código e "Seus R$ 35 em créditos já entraram. Faltam R$ 3, pagos na hora."
 11. Toque em **Voltar ao drop**. O drop acaba quando os 10 minutos passam ou quando a pilha esvazia. Os outros alunos levam uma peça a cada 8 segundos, então a pilha também se esvazia sozinha em cerca de 1 min 45 s. Para a gravação, o jeito rápido é passar as peças que restam (**passo**, ou arrastar para a esquerda) até aparecer "O drop acabou. Você ficou com uma peça." Toque em **Voltar**.
 12. Na espera, toque em "Seu blazer preto espera você terça…", depois em **Já retirei** e em **ótimo**: "Obrigado. Uma peça a menos no lixo: Administração chegou a 129."
-13. Toque em "Deco · R$ 0 em créditos" no topo. A área **Você** mostra a jaqueta vendida em créditos, a reserva retirada e "Seu último anúncio levou N s.". Dá para trocar a cor do brechó aqui.
+13. Toque em "Deco · R$ 0 em créditos" no topo. A área **Você** mostra a jaqueta vendida em créditos, a reserva retirada e "Seu último anúncio levou N s.". Dá para trocar a cor do brechó aqui (vermelho, verde, rosa, azul ou amarelo): ela muda a abertura, a cortina, o carimbo "É MINHA" e o toque dos botões.
 
 ## Como regravar
 
-Em **Você**, toque em **Recomeçar do zero** e depois em **sim**. Tudo é apagado (perfil, créditos, reservas, anúncios, cor) e o app volta à primeira vez.
+Em **Você**, toque em **Recomeçar do zero** e depois em **sim**. Tudo é apagado (perfil, créditos, reservas, anúncios, cor) e o app volta à primeira vez, passando de novo pela abertura.
 
 ## Como trocar uma foto
 
@@ -45,6 +47,10 @@ Em **Você**, toque em **Recomeçar do zero** e depois em **sim**. Tudo é apaga
 3. Ponha a linha da foto (arquivo e origem) em `fotos/CREDITOS.md`. Os testes conferem o tamanho e o crédito.
 
 Os nomes de vendedores, cursos, notas e números do app são exemplos. Todos ficam em `dados.js` (`CATALOGO`, `COMPRADOR`, `CONTADOR_BASE`, `DROP.online`, `DROP.esperando`).
+
+## A cara do app
+
+O visual segue o template Velvet (loja de roupas) do acervo de templates: creme `#EBE0D9`, preto e vermelho, letras gigantes, botão em bloco e movimento com freio longo. Nenhum arquivo do template foi copiado: tudo foi reescrito em HTML, CSS e JavaScript puros, dentro de `estilo.css` e `app.js`. A fonte é a Inter Tight, embutida em `fontes/` com a licença dela (`fontes/OFL.txt`, SIL OFL 1.1).
 
 ## O que é simulado
 

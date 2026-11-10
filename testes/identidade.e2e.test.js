@@ -1,17 +1,21 @@
 const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar } = require('./apoio.js'); const DADOS = require('../dados.js');
-test('identidade: papel e drop, fontes embutidas, foco, sem rolagem lateral', async () => {
+test('identidade: creme e preto, fonte embutida, foco, sem rolagem lateral', async () => {
   const { page, fechar } = await abrir({ largura: 360 });
   const css = (sel, prop) => page.evaluate(([s, p]) => getComputedStyle(document.querySelector(s))[p], [sel, prop]);
-  assert.deepEqual([await css('body', 'backgroundColor'), await css('.frase', 'color')], ['rgb(255, 255, 255)', 'rgb(31, 35, 34)']);
-  assert.match(await css('.frase', 'fontFamily'), /Newsreader/);
+  // a capa abre na luz do drop: preto com tinta creme
+  assert.deepEqual([await css('body', 'backgroundColor'), await css('.frase', 'color'), await css('#marca', 'color')], ['rgb(0, 0, 0)', 'rgb(235, 224, 217)', 'rgb(235, 224, 217)']);
+  assert.match(await css('.frase', 'fontFamily'), /Inter Tight/);
   const carregadas = await page.evaluate(() => document.fonts.ready.then(() => [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/"/g, ''))));
-  assert.ok(carregadas.includes('Newsreader'));
+  assert.ok(carregadas.includes('Inter Tight'));
+  // o nome gigante vai de ponta a ponta da coluna, sem estourar
+  const t = await page.evaluate(() => { const r = document.createRange(); r.selectNodeContents(document.querySelector('.titulo')); return [r.getBoundingClientRect().width, document.querySelector('.regua').getBoundingClientRect().width]; });
+  assert.ok(t[0] <= t[1] + 1 && t[0] >= t[1] * .94, 'título ' + t[0] + ' numa coluna de ' + t[1]);
   assert.ok(await page.locator('#marca svg').isVisible());
   await page.keyboard.press('Tab');
   assert.notEqual(await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle), 'none');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-  await page.evaluate(() => document.body.classList.add('escuro'));
-  assert.deepEqual([await css('body', 'backgroundColor'), await css('.frase', 'color'), await css('#marca', 'color')], ['rgb(31, 35, 34)', 'rgb(244, 241, 234)', 'rgb(244, 241, 234)']);
+  await page.evaluate(() => document.body.classList.remove('escuro'));
+  assert.deepEqual([await css('body', 'backgroundColor'), await css('.frase', 'color')], ['rgb(235, 224, 217)', 'rgb(0, 0, 0)']);
   await fechar();
 });
 test('computador: coluna central com largura de celular', async () => {

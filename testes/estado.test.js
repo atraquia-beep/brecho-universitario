@@ -2,7 +2,7 @@ const test = require('node:test'); const assert = require('node:assert/strict');
 const congelar = o => { Object.values(o).forEach(v => v && typeof v === 'object' && congelar(v)); return Object.freeze(o); };
 const com = extra => congelar({ ...L.estadoInicial(), ...extra });
 const Q = 'quinta, das 12h às 13h', T = 'terça, das 12h às 13h';
-test('estadoInicial', () => assert.deepEqual(L.estadoInicial(), { perfil: null, creditos: 0, reservas: [], anuncios: [], pedido: null, acordar: false, realce: '#F0E4D6', ultimoAnuncioSeg: null, ensaio: null, drop: null }));
+test('estadoInicial', () => assert.deepEqual(L.estadoInicial(), { perfil: null, creditos: 0, reservas: [], anuncios: [], pedido: null, acordar: false, realce: '#FF0000', ultimoAnuncioSeg: null, ensaio: null, drop: null }));
 test('valorVenda: comissão de 10%', () => { assert.deepEqual(L.valorVenda(35), { pix: 31.5, creditos: 35 }); assert.deepEqual(L.valorVenda(18), { pix: 16.2, creditos: 18 }); });
 test('janelasDeRetirada', () => {
   assert.deepEqual(L.janelasDeRetirada(new Date(2026, 10, 10, 9, 0)), [T, Q]);   // terça 9h

@@ -3,7 +3,8 @@ test('primeira vez: frase editável, e-mail da Unicamp, entrada', async () => {
   const { page, fechar } = await abrir();
   await page.getByText('Oi. Este é o brechó do campus de Limeira, só entre alunos.').waitFor();
   assert.equal(await page.locator('#conta').innerText(), '');
-  assert.equal(await page.evaluate(() => document.body.classList.contains('escuro')), false);
+  assert.equal(await page.evaluate(() => document.body.classList.contains('escuro')), true); // a capa abre no preto
+  assert.equal(await page.locator('h1.titulo').getAttribute('aria-label'), 'BRECHÓ');
   await page.getByRole('button', { name: 'Entrar' }).click();
   await page.getByText('Como eu te chamo?').waitFor();
   await page.getByLabel('Seu nome').fill('Deco');

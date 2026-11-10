@@ -19,11 +19,11 @@ function carregar() {
 
 let estado = carregar();
 
-// a cor escolhida vale nas duas luzes: no escuro, o mesmo tom a 26% (sem color-mix, R7)
+// a cor escolhida vale nas duas luzes: no escuro, o mesmo tom a 40% (sem color-mix, R7)
 function aplicarRealce() {
   const h = estado.realce, s = document.documentElement.style;
   s.setProperty('--realce', h);
-  s.setProperty('--realce-escuro', 'rgba(' + [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)).join(', ') + ', .26)');
+  s.setProperty('--realce-escuro', 'rgba(' + [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)).join(', ') + ', .4)');
 }
 
 function atualizarConta() {
@@ -156,7 +156,8 @@ function campo(valor, rotulo, placeholder, aoMudar, tipo = 'text') {
     c.style.width = Math.ceil(ctx.measureText(texto).width + texto.length * (parseFloat(css.letterSpacing) || 0)) + 1 + 'px';
   };
   c.addEventListener('input', () => { medir(); aoMudar(c.value); });
-  document.fonts.ready.then(medir);
+  // mede de novo quando a fonte do campo chegar: antes disso o canvas mede com a fonte reserva, que é mais larga
+  document.fonts.ready.then(() => { medir(); document.fonts.load(ctx.font).then(medir, () => {}); });
   return c;
 }
 
@@ -170,6 +171,22 @@ function principal(texto, aoTocar) {
 }
 
 // ---------- Telas ----------
+function el(tag, props) { return Object.assign(document.createElement(tag), props); }
+
+// título em letras soltas, para subirem uma a uma; quem ouve a tela recebe a palavra inteira
+function letras(tag, classe, texto) {
+  const no = el(tag, { className: classe });
+  no.setAttribute('aria-label', texto);
+  texto.split('').forEach((c, i) => {
+    const l = el('span', { className: 'letra', textContent: c });
+    l.setAttribute('aria-hidden', 'true');
+    l.style.setProperty('--i', i);
+    no.appendChild(l);
+  });
+  return no;
+}
+const regua = () => { const r = el('i', { className: 'regua' }); r.setAttribute('aria-hidden', 'true'); return r; };
+
 const textoDoTeto = t => t === null ? 'sem teto' : 'até ' + Logica.dinheiro(t);
 
 // As duas frases do perfil. aoMudar(campo, valor) decide se redesenha; a tela de Você grava a cada troca.
@@ -206,11 +223,19 @@ function primeiraVez() {
   };
   const frases = frasesDoPerfil(rascunho, aoMudar);
   frases.forEach(f => f.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); })));
+  const d = DADOS.DROP, ficha = el('p', { className: 'ficha lab' });
+  ficha.append(el('span', { textContent: 'Brechó Universitário' }), el('span', { textContent: 'Limeira · ' + new Date().getFullYear() }));
+  const fecho = el('p', { className: 'fecho', textContent: 'Roupa boa não acaba.' });
+  fecho.appendChild(el('span', { textContent: 'Troca de dono.' }));
   return [
+    letras('h1', 'titulo', DADOS.MARCA), regua(), ficha,
     frase('Oi. Este é o brechó do campus de Limeira, só entre alunos.'),
+    frase('As peças entram todas juntas, ' + d.dias.map(n => Logica.DIAS_DA_SEMANA[n]).join(' e ') + ', às ' + d.hora + 'h. São '
+      + d.duracaoMs / 60000 + ' minutos. Quem tocar primeiro leva.'),
     ...frases, aviso,
     principal('Entrar', entrar),
     apoio('Toque numa palavra sublinhada para mudar. Dá para trocar tudo depois.'),
+    fecho, apoio('Feito por alunos, para alunos.'),
   ];
 }
 
@@ -305,7 +330,7 @@ function telaEspera(sit) {
   acordar.classList.add('final');
   const vender = Object.assign(document.createElement('a'), { className: 'palavra', href: '#/vender', textContent: 'vender uma peça para este drop' });
   const ensaiar = botaoPalavra('ensaiar o drop agora', ensaiarAgora);
-  return [...avisosDaEspera(), rotulo, contagem, fraseTamanho, frase('Cada peça é única. Quem tocar primeiro leva.'), fotos, acordar,
+  return [...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, frase('Cada peça é única. Quem tocar primeiro leva.'), fotos, acordar,
     apoio(DADOS.DROP.esperando + ' alunos esperando · ', vender, ' · ', ensaiar)];
 }
 
@@ -388,8 +413,6 @@ function arrastavel(cartao, carimbo) {
   cartao.addEventListener('pointerup', e => soltar(e, true));
   cartao.addEventListener('pointercancel', e => soltar(e, false));
 }
-
-function el(tag, props) { return Object.assign(document.createElement(tag), props); }
 
 function telaNoAr(sit) {
   const pilha = pilhaAtual(), peca = pilha[0], perfil = estado.perfil;
@@ -486,7 +509,7 @@ function telaSua() {
   fundo.classList.add('final');
   return [
     frase((f ? 'É sua. A ' : 'É seu. O ') + peca.nome.toLowerCase() + ' d' + v.artigo + ' ' + v.nome + ' espera você ', janela, ', no ponto da FCA. Mostre este código:'),
-    codigo, frase(pagamento), acao, fundo,
+    codigo, regua(), frase(pagamento), acao, fundo,
   ];
 }
 
@@ -645,6 +668,7 @@ function recomecar() {
   document.getElementById('pedido-campo').value = '';
   aplicarRealce();
   atualizarConta();
+  abertura(); // regravar começa pela abertura
   location.hash = '#/';
 }
 
@@ -666,6 +690,11 @@ function telaVoce() {
   const reservas = estado.reservas.filter(r => pecaPorId(r.pecaId)).map(r => frase(el('a', { className: 'palavra', href: '#/sua/' + r.pecaId,
     textContent: pecaPorId(r.pecaId).nome + ' · ' + r.janela + ' · código ' + r.codigo + (r.retirada ? ' · retirada' : '') })));
   const cor = DADOS.CORES.find(c => c.hex === estado.realce);
+  const amostra = palavra(cor.nome, 'Cor', DADOS.CORES.map(c => c.nome), n => {
+    mudar({ ...estado, realce: DADOS.CORES.find(c => c.nome === n).hex });
+    aplicarRealce();
+  });
+  amostra.classList.add('amostra'); // a palavra mostra a própria cor
   // quem usa teclado segue entre a pergunta e o botão
   const nao = botaoPalavra('não', () => { apagando = false; desenhar(); document.getElementById('recomecar').focus(); });
   const recomeco = botaoPalavra('Recomeçar do zero', () => { apagando = true; desenhar(); document.getElementById('nao').focus(); });
@@ -677,13 +706,56 @@ function telaVoce() {
     rotulo('Suas peças'), ...pecas,
     rotulo('Suas reservas'), ...(reservas.length ? reservas : [frase('Nenhuma reserva por enquanto.')]),
     ...(estado.ultimoAnuncioSeg != null ? [frase('Seu último anúncio levou ' + estado.ultimoAnuncioSeg + ' s.')] : []),
-    frase('A cor do seu brechó é ', palavra(cor.nome, 'Cor', DADOS.CORES.map(c => c.nome), n => {
-      mudar({ ...estado, realce: DADOS.CORES.find(c => c.nome === n).hex });
-      aplicarRealce();
-    }), '.'),
+    frase('A cor do seu brechó é ', amostra, '.'),
     apoio(botaoPalavra('ensaiar o drop agora', ensaiarAgora)),
     ...fim,
   ];
+}
+
+// ---------- Cortinas ----------
+// Painel de tela cheia com uma palavra que sobe letra a letra e sai sozinho para cima (estilo.css).
+// Só visual: o app já está desenhado por baixo e nada espera por ele. Um toque pula; quem pede menos movimento não vê.
+// A barra do navegador acompanha a luz da tela; enquanto a abertura está na frente, o creme dela.
+function barra() {
+  document.querySelector('meta[name="theme-color"]').content =
+    document.getElementById('abertura') || !document.body.classList.contains('escuro') ? '#EBE0D9' : '#000000';
+}
+
+function cortina(id, texto) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+  const velha = document.getElementById(id);
+  if (velha) velha.remove();
+  const no = el('div', { id, className: 'cortina' });
+  no.setAttribute('aria-hidden', 'true');
+  no.appendChild(letras('p', 'ab-marca', texto));
+  const tirar = () => { no.remove(); if (!document.getElementById('abertura')) document.body.classList.remove('abrindo'); barra(); };
+  no.addEventListener('animationend', e => { if (e.target === no) tirar(); });
+  no.addEventListener('click', tirar);
+  setTimeout(tirar, 5000); // reserva: uma aba em segundo plano pode não avisar o fim da animação
+  document.body.appendChild(no);
+  return no;
+}
+
+// A abertura do site: tela creme, o nome na cor da pessoa, as peças passando atrás e o contador indo a 100.
+function abertura() {
+  const no = cortina('abertura', DADOS.MARCA);
+  if (!no) return;
+  document.body.classList.add('abrindo'); // segura a entrada da tela de baixo até a cortina sair
+  const pilha = el('div', { className: 'ab-pilha' });
+  [-7, 5, -3, 8, -5, 3, -2].forEach((giro, i) => {
+    const img = el('img', { src: DADOS.CATALOGO[i].foto, alt: '' });
+    img.style.setProperty('--i', i);
+    img.style.transform = 'rotate(' + giro + 'deg)';
+    pilha.appendChild(img);
+  });
+  no.insertBefore(pilha, no.firstChild);
+  const conta = el('span', { className: 'ab-conta', textContent: '000' });
+  no.lastChild.appendChild(conta);
+  const t0 = performance.now();
+  (function contar(t) {
+    conta.textContent = ('00' + Math.round(Math.max(0, Math.min(1, (t - t0) / 2500)) * 100)).slice(-3);
+    if (t - t0 < 2500 && no.parentNode) requestAnimationFrame(contar);
+  })(t0);
 }
 
 // ---------- Rotas ----------
@@ -697,10 +769,12 @@ function desenhar() {
   if (venda && rotaAtual() !== 'vender') sairDaVenda();
   const tela = document.getElementById('tela');
   const parte = location.hash.replace(/^#\/?/, '').split('/')[0];
-  const rota = estado.perfil ? (Object.prototype.hasOwnProperty.call(rotas, parte) ? rotas[parte] : null) : { escura: false, tela: primeiraVez };
+  const rota = estado.perfil ? (Object.prototype.hasOwnProperty.call(rotas, parte) ? rotas[parte] : null) : { escura: true, tela: primeiraVez };
+  const telaAntes = ultimaTela;
   const nos = rota ? rota.tela() : false;
   if (nos === false) { location.replace('#/'); return; }
   document.body.classList.toggle('escuro', !!rota.escura);
+  barra();
   const principalNa = tela => rota === rotas[''] && ultimaTela === tela;
   // o campo do pedido só existe na espera
   const comPedido = principalNa('espera');
@@ -712,6 +786,8 @@ function desenhar() {
   const reserva = rota === rotas.sua && estado.reservas.find(x => x.pecaId === location.hash.split('/')[2]);
   const vista = (estado.perfil ? parte : 'primeira') + '|' + (rota === rotas[''] ? ultimaTela + (ultimaTela === 'no-ar' ? pecaNaTela.id : '')
     : rota === rotas.vender ? venda.passo : reserva ? comoFoi + '|' + reserva.retirada : '');
+  // o drop abriu na frente da pessoa: a cortina na cor dela marca a virada
+  if (rota === rotas[''] && telaAntes === 'espera' && ultimaTela === 'no-ar' && !document.getElementById('abertura')) cortina('ao-vivo', 'AO VIVO');
   tela.classList.toggle('entra', vista !== ultimaVista);
   ultimaVista = vista;
   tela.textContent = '';
@@ -781,9 +857,9 @@ document.getElementById('pedido').addEventListener('submit', e => {
   c.blur();
   scrollTo(0, 0);
 });
-// o carimbo "é minha" usa o itálico: pede já, para não chegar atrasado no primeiro arrasto
-if (document.fonts && document.fonts.load) document.fonts.load('italic 500 30px Newsreader').catch(() => {});
+document.addEventListener('touchstart', () => {}, { passive: true }); // o Safari do iPhone só mostra :active (o toque do botão) com um ouvinte de toque
 aplicarRealce();
+abertura();
 atualizarConta();
 desenhar();
 setInterval(tique, 200);

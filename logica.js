@@ -53,7 +53,7 @@ Logica.sugerirPreco = (tipo, estado) => {
   return { min, max, sugerido: multiplo5((min + max) / 2) };
 };
 
-Logica.estadoInicial = () => ({ perfil: null, creditos: 0, reservas: [], anuncios: [], pedido: null, acordar: false, realce: '#F0E4D6', ultimoAnuncioSeg: null, ensaio: null, drop: null });
+Logica.estadoInicial = () => ({ perfil: null, creditos: 0, reservas: [], anuncios: [], pedido: null, acordar: false, realce: '#FF0000', ultimoAnuncioSeg: null, ensaio: null, drop: null });
 
 Logica.valorVenda = preco => ({ pix: Math.round(preco * (1 - D.COMISSAO) * 100) / 100, creditos: preco });
 
@@ -149,6 +149,7 @@ Logica.contagem = ms => {
 Logica.relogio = ms => { const s = segundosAcima(ms); return dois(Math.floor(s / 60)) + ':' + dois(s % 60); };
 
 Logica.diaDaSemana = ms => DIAS_DA_SEMANA[new Date(ms).getDay()];
+Logica.DIAS_DA_SEMANA = DIAS_DA_SEMANA;
 
 Logica.ensaiar = (estado, agoraMs) => ({ ...estado, ensaio: agoraMs + D.DROP.ensaioMs });
 

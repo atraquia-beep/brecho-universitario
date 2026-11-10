@@ -13,11 +13,11 @@ test('mudar o perfil em Você muda a espera', async () => {
 test('cor de realce vale na hora e depois de recarregar', async () => {
   const { page, fechar } = await abrir(); await entrar(page);
   const realce = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--realce').trim().toUpperCase());
-  assert.equal(await realce(), '#F0E4D6');
+  assert.equal(await realce(), '#FF0000');
   await page.locator('#conta').click();
   await page.getByRole('button', { name: /^Cor:/ }).click(); await page.getByRole('button', { name: 'verde', exact: true }).click();
-  assert.equal(await realce(), '#DDEBD9');
-  await page.reload(); await page.getByText('A cor do seu brechó é').waitFor(); assert.equal(await realce(), '#DDEBD9');
+  assert.equal(await realce(), '#2FCB6E');
+  await page.reload(); await page.getByText('A cor do seu brechó é').waitFor(); assert.equal(await realce(), '#2FCB6E');
   await fechar();
 });
 test('ensaiar e recomeçar do zero', async () => {
