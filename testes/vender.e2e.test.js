@@ -29,6 +29,7 @@ test('vender sem câmera: 19 segundos e a peça entra no próximo drop', async (
 test('cronômetro, tamanho do perfil, palavras que refazem o preço e Pix', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page, { tamanho: 'G' });
   await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#cronometro').waitFor(); // a rota abre antes de o relógio andar
   await passar(3000); assert.equal(await page.locator('#cronometro').innerText(), '00:03');
   await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(1200);
   await page.getByText(/tamanho G/).waitFor();
@@ -136,5 +137,40 @@ test('o visor ocupa a tela e os controles cabem sem rolar', async () => {
     const caixa = await b.boundingBox(); assert.ok(caixa.y + caixa.height <= alto, 'botão termina em ' + (caixa.y + caixa.height));
   }
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await fechar();
+});
+test('cronômetro conta segundos inteiros e para no número da frase', async () => {
+  const { page, passar, fechar } = await abrir(); await entrar(page);
+  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#cronometro').waitFor();
+  await passar(200); assert.equal(await page.locator('#cronometro').innerText(), '00:00');
+  await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(1200);
+  await page.getByRole('button', { name: 'Anunciar no drop' }).waitFor();
+  await passar(18000); assert.equal(await page.locator('#cronometro').innerText(), '00:19');
+  await page.getByRole('button', { name: 'Anunciar no drop' }).click();
+  await page.getByText(/^No drop em 19 segundos\./).waitFor();
+  assert.equal(await page.locator('#cronometro').innerText(), '00:19');
+  await fechar();
+});
+test('a peça de exemplo sempre ganha o palpite da jaqueta', async () => {
+  const { page, passar, fechar } = await abrir(); await entrar(page);
+  for (let i = 0; i < 2; i++) {
+    await ateOPalpite(page, passar);
+    await page.getByText(/^Parece uma jaqueta jeans, tamanho M, pouco uso\./).waitFor();
+    await page.getByRole('button', { name: 'Anunciar no drop' }).click(); await page.getByRole('button', { name: 'Voltar' }).click();
+  }
+  assert.equal((await salvo(page)).anuncios.length, 2);
+  await fechar();
+});
+test('enquanto a câmera não responde, já dá para escolher uma foto', async () => {
+  const { page, passar, fechar } = await abrir({ antes: () => { Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia: () => new Promise(() => {}) } }); } });
+  await entrar(page);
+  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.getByRole('button', { name: 'escolher uma foto' }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Fotografar' }).count(), 0);
+  assert.equal(await page.locator('.canto').count(), 0);
+  await page.setInputFiles('#foto-entrada', path.join(__dirname, '..', 'fotos', 'exemplo-venda.jpg'));
+  await page.getByText('Olhando…').waitFor(); await passar(1200);
+  await page.getByRole('button', { name: 'Anunciar no drop' }).waitFor();
   await fechar();
 });

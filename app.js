@@ -46,7 +46,18 @@ function mudar(novoEstado) { guardar(novoEstado); desenhar(); }
 function paragrafo(classe, partes) {
   const p = document.createElement('p');
   p.className = classe;
-  partes.forEach(x => p.appendChild(typeof x === 'string' ? document.createTextNode(x) : x));
+  for (let i = 0; i < partes.length; i++) {
+    const x = partes[i], pontos = typeof partes[i + 1] === 'string' && /^[.,;:!?]+/.exec(partes[i + 1]);
+    if (typeof x === 'string') p.appendChild(document.createTextNode(x));
+    else if (!pontos || !(x.classList.contains('palavra') || x.classList.contains('campo'))) p.appendChild(x);
+    else {
+      // a pontuação depois de uma palavra ou de um campo nunca cai sozinha na linha de baixo
+      const junto = document.createElement('span');
+      junto.className = 'junto';
+      junto.append(x, pontos[0]);
+      p.append(junto, partes[++i].slice(pontos[0].length));
+    }
+  }
   return p;
 }
 const frase = (...partes) => paragrafo('frase', partes);
@@ -140,7 +151,9 @@ function campo(valor, rotulo, placeholder, aoMudar, tipo = 'text') {
   const medir = () => {
     const css = getComputedStyle(c);
     ctx.font = css.fontStyle + ' ' + css.fontWeight + ' ' + css.fontSize + ' ' + css.fontFamily;
-    c.style.width = Math.ceil(ctx.measureText(c.value || placeholder).width) + 3 + 'px';
+    const texto = c.value || placeholder;
+    // o canvas mede sem o letter-spacing que o navegador aplica a cada letra
+    c.style.width = Math.ceil(ctx.measureText(texto).width + texto.length * (parseFloat(css.letterSpacing) || 0)) + 1 + 'px';
   };
   c.addEventListener('input', () => { medir(); aoMudar(c.value); });
   document.fonts.ready.then(medir);
@@ -206,7 +219,6 @@ let naoEntendi = false;     // mostra a frase de "não entendi" só no próximo 
 
 const rotaAtual = () => location.hash.replace(/^#\/?/, '').split('/')[0];
 
-// o texto vem da pessoa: sempre textContent
 function botaoPalavra(texto, aoTocar) {
   const b = document.createElement('button');
   b.type = 'button';
@@ -311,14 +323,14 @@ function fantasma(lado) {
   const foto = document.querySelector('#drop .foto'), img = document.getElementById('peca');
   if (!foto || !img || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const r = foto.getBoundingClientRect();
-  // a camada recorta o fantasma: ele nunca alarga a página
+  // a camada recorta o fantasma na coluna do celular: ele nunca alarga a página
   const camada = el('div', { className: 'camada-fantasma' });
   camada.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(camada);
   const f = el('img', { src: img.src, alt: '', className: 'fantasma ' + lado });
-  Object.assign(f.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', transform: img.parentNode.style.transform });
+  Object.assign(f.style, { left: r.left - camada.getBoundingClientRect().left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', transform: img.parentNode.style.transform });
   ['animationend', 'animationcancel'].forEach(t => f.addEventListener(t, () => camada.remove()));
   camada.appendChild(f);
-  document.body.appendChild(camada);
 }
 
 // Toda saída de peça passa por aqui.
@@ -337,7 +349,7 @@ function pegarPeca() {
   location.hash = '#/sua/' + peca.id;
 }
 
-// mostra um nó sobre a foto por 6 segundos (a Task 9 usa)
+// mostra um nó sobre a foto por 6 segundos
 function avisoNoDrop(no) {
   const aviso = document.getElementById('aviso');
   if (!aviso) return;
@@ -395,7 +407,7 @@ function telaNoAr(sit) {
   const foto = el('div', { className: 'foto' });
   foto.append(cartao, pilulas);
 
-  const linhas = [frase(peca.nome + ', ' + peca.tamanho + ', ' + peca.estado + '. ' + Logica.dinheiro(peca.preco) + '.'),
+  const linhas = [frase(peca.nome + ', ' + peca.tamanho + ', ' + (feminina(peca) ? peca.estado.replace(/^(usad|nov)o/, '$1a') : peca.estado) + '. ' + Logica.dinheiro(peca.preco) + '.'),
     el('p', { id: 'sobre', className: 'apoio', textContent: sobrePeca(peca) })];
   if (estado.pedido && Logica.buscar([peca], Logica.entenderPedido(estado.pedido, perfil), []).length) {
     linhas.push(apoio('Você pediu: ' + estado.pedido)); // texto da pessoa: só textContent
@@ -483,7 +495,8 @@ function telaSua() {
 let venda = null;
 const EXEMPLO = 'fotos/exemplo-venda.jpg';
 
-const tempoDaVenda = () => Logica.relogio((venda.fim || Date.now()) - venda.entrada);
+// segundos inteiros já passados (relogio arredonda para cima, certo só para contagem regressiva)
+const tempoDaVenda = () => Logica.relogio(Math.floor(((venda.fim || Date.now()) - venda.entrada) / 1000) * 1000);
 
 function pararCamera(v) {
   if (v.stream) v.stream.getTracks().forEach(t => t.stop());
@@ -501,9 +514,8 @@ function sairDaVenda() {
 }
 
 function iniciarVenda() {
-  const p = DADOS.PALPITES[estado.anuncios.length % DADOS.PALPITES.length];
   const v = venda = { passo: 'visor', entrada: Date.now(), fim: null, camera: null, stream: null, video: null, foto: null, erro: false, timer: null,
-    anuncio: { tipo: p.tipo, tamanho: estado.perfil.tamanho, estado: p.estado, preco: Logica.sugerirPreco(p.tipo, p.estado).sugerido, receber: 'creditos' } };
+    anuncio: { tamanho: estado.perfil.tamanho, receber: 'creditos' } };
   document.querySelector('.topo').appendChild(el('span', { id: 'cronometro', className: 'pilula', textContent: tempoDaVenda() }));
   atualizarConta();
   const md = navigator.mediaDevices; // não existe em origem insegura
@@ -530,6 +542,9 @@ function fotografou(foto) {
   const v = venda;
   pararCamera(v);
   v.foto = foto;
+  // a peça de exemplo é sempre a jaqueta; foto de verdade alterna os palpites
+  const p = DADOS.PALPITES[foto === EXEMPLO ? 0 : estado.anuncios.length % DADOS.PALPITES.length];
+  Object.assign(v.anuncio, { tipo: p.tipo, estado: p.estado, preco: Logica.sugerirPreco(p.tipo, p.estado).sugerido });
   v.passo = 'olhando';
   desenhar();
   v.timer = setTimeout(() => { v.passo = 'palpite'; desenhar(); }, 1200);
@@ -558,7 +573,7 @@ function anunciarVenda() {
   // o próximo drop do calendário que ainda não começou (ensaio ou drop no ar não contam)
   let dia = Logica.dropDoCalendario(agora);
   if (dia <= agora) dia = Logica.dropDoCalendario(dia + DADOS.DROP.duracaoMs);
-  v.fim = v.entrada + s * 1000; // relogio arredonda para cima: o cronômetro para no mesmo número da frase
+  v.fim = v.entrada + s * 1000; // o cronômetro para no mesmo número da frase
   v.passo = 'publicado';
   v.publicado = 'No drop em ' + (s === 1 ? '1 segundo' : s + ' segundos') + '. ' + (feminina(a) ? 'Sua ' : 'Seu ') + a.tipo
     + ' entra ' + Logica.diaDaSemana(dia) + ', às ' + DADOS.DROP.hora + 'h.';
@@ -573,18 +588,21 @@ function telaVender() {
   const visor = el('div', { className: 'foto visor' + (v.passo === 'visor' || v.passo === 'olhando' ? ' cheio' : '') });
   const rodape = el('div', { className: 'rodape' });
   if (v.passo === 'visor') {
-    if (v.camera === null) return [visor]; // nada de botões antes de o visor estar decidido
-    visor.appendChild(v.camera ? v.video : el('img', { id: 'visor', src: EXEMPLO, alt: 'Peça de exemplo: jaqueta jeans num cabide' }));
-    ['sup esq', 'sup dir', 'inf esq', 'inf dir'].forEach(c => visor.appendChild(el('i', { className: 'canto ' + c })));
-    const disparo = el('button', { type: 'button', id: 'disparo', className: 'disparo' });
-    disparo.setAttribute('aria-label', 'Fotografar');
-    disparo.addEventListener('click', disparar);
+    // "escolher uma foto" sempre existe; o disparo e os cantos só depois de o visor estar decidido
+    if (v.camera !== null) {
+      visor.appendChild(v.camera ? v.video : el('img', { id: 'visor', src: EXEMPLO, alt: 'Peça de exemplo: jaqueta jeans num cabide' }));
+      ['sup esq', 'sup dir', 'inf esq', 'inf dir'].forEach(c => visor.appendChild(el('i', { className: 'canto ' + c })));
+      const disparo = el('button', { type: 'button', id: 'disparo', className: 'disparo' });
+      disparo.setAttribute('aria-label', 'Fotografar');
+      disparo.addEventListener('click', disparar);
+      rodape.appendChild(disparo);
+    }
     const entrada = el('input', { type: 'file', id: 'foto-entrada', accept: 'image/*', hidden: true });
     entrada.addEventListener('change', () => abrirFoto(entrada.files[0]));
     // redesenhar tira o vídeo da página, o que o pausa
     if (v.video) Promise.resolve().then(() => { const p = v.video && v.video.play(); if (p) p.catch(() => {}); });
-    rodape.append(disparo,
-      ...(v.camera ? [] : [apoio('Sem câmera aqui: usei uma peça de exemplo.')]),
+    rodape.append(
+      ...(v.camera === false ? [apoio('Sem câmera aqui: usei uma peça de exemplo.')] : []),
       ...(v.erro ? [apoio('Não consegui abrir essa foto. Tente outra ou use a peça de exemplo.')] : []),
       apoio(botaoPalavra('escolher uma foto', () => entrada.click()), entrada));
     visor.appendChild(rodape);
@@ -643,7 +661,7 @@ function telaVoce() {
   };
   const rotulo = t => { const p = apoio(t); p.classList.add('lab'); return p; };
   const pecas = estado.anuncios.length ? estado.anuncios.map(a => frase(a.tipo + ' · ' + a.tamanho + ' · ' + din(a.preco) + ' · '
-    + (!a.vendida ? 'entra no próximo drop' : a.receber === 'pix' ? 'vendida no Pix' : 'vendida em créditos')))
+    + (!a.vendida ? 'entra no próximo drop' : (feminina(a) ? 'vendida' : 'vendido') + (a.receber === 'pix' ? ' no Pix' : ' em créditos'))))
     : [frase('Você ainda não anunciou nada.')];
   const reservas = estado.reservas.filter(r => pecaPorId(r.pecaId)).map(r => frase(el('a', { className: 'palavra', href: '#/sua/' + r.pecaId,
     textContent: pecaPorId(r.pecaId).nome + ' · ' + r.janela + ' · código ' + r.codigo + (r.retirada ? ' · retirada' : '') })));
@@ -748,6 +766,7 @@ function tique() {
 window.addEventListener('hashchange', () => { comoFoi = null; apagando = false; desenhar(); });
 document.addEventListener('keydown', e => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  if (e.altKey || e.ctrlKey || e.metaKey || e.repeat) return; // Alt+seta é o voltar do navegador
   if (aberta || !document.getElementById('drop') || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   e.preventDefault();
   if (e.key === 'ArrowRight') pegarPeca(); else passarPeca();
@@ -756,10 +775,14 @@ document.getElementById('pedido').addEventListener('submit', e => {
   e.preventDefault();
   const c = document.getElementById('pedido-campo'), texto = c.value.trim();
   if (!texto) return;
-  if (!Logica.entenderPedido(texto, estado.perfil).tipos.length) { naoEntendi = true; desenhar(); return; }
-  c.value = '';
-  mudar(Logica.pedir(estado, texto));
+  if (!Logica.entenderPedido(texto, estado.perfil).tipos.length) { naoEntendi = true; desenhar(); }
+  else { c.value = ''; mudar(Logica.pedir(estado, texto)); }
+  // o teclado do celular fecha e a resposta, no alto da tela, fica à vista
+  c.blur();
+  scrollTo(0, 0);
 });
+// o carimbo "é minha" usa o itálico: pede já, para não chegar atrasado no primeiro arrasto
+if (document.fonts && document.fonts.load) document.fonts.load('italic 500 30px Newsreader').catch(() => {});
 aplicarRealce();
 atualizarConta();
 desenhar();

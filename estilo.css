@@ -3,6 +3,7 @@
 @font-face { font-family: Inter; src: url(fontes/Inter-normal.woff2); font-weight: 400 600; }
 
 * { box-sizing: border-box; }
+html { overscroll-behavior-y: none; }
 [hidden] { display: none !important; }
 
 /* Papel por padrão; body.escuro é a luz do drop. */
@@ -11,12 +12,14 @@
 body.escuro { --fundo: #1F2322; --tinta: #F4F1EA; --apoio: #A9ADAA; --realce: var(--realce-escuro, rgba(240, 228, 214, .26)); }
 
 body {
-  margin: 0 auto; max-width: 430px; min-height: 100vh; padding: 26px 24px 22px;
+  margin: 0 auto; max-width: 430px; min-height: 100vh; min-height: 100dvh; padding: 26px 24px 22px;
   display: flex; flex-direction: column;
   background: var(--fundo); color: var(--tinta);
   font: 400 21px/1.36 Newsreader, serif; letter-spacing: -.01em;
 }
 :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+/* toques seguidos ("passo", "passo"…) não dão zoom no iPhone */
+.palavra, .principal, #disparo, #pedido button, .topo a { touch-action: manipulation; }
 
 .topo { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
 #marca { color: var(--tinta); display: block; }
@@ -27,6 +30,8 @@ body {
 p { margin: 0 0 16px; }
 .frase { margin: 0 0 16px; }
 .apoio { font: 400 13px/1.45 Inter, sans-serif; letter-spacing: -.005em; color: var(--apoio); }
+.junto { white-space: nowrap; }
+.junto > * { white-space: normal; }
 
 /* Ação: palavra sublinhada dentro da frase. */
 .palavra, .opcoes a, .opcoes button {
@@ -66,7 +71,14 @@ p { margin: 0 0 16px; }
 .teaser img:nth-child(1) { left: 0; top: 8px; transform: rotate(-6deg); }
 .teaser img:nth-child(2) { left: 30%; top: 0; transform: rotate(3deg); }
 .teaser img:nth-child(3) { left: 60%; top: 10px; transform: rotate(-3deg); }
-.teaser span { position: absolute; left: 0; right: 0; top: 52px; text-align: center; font: 400 12.5px Inter, sans-serif; color: #F4F1EA; letter-spacing: .02em; }
+.teaser span { position: absolute; left: 0; right: 0; top: 52px; width: max-content; margin: 0 auto; padding: 5px 10px; border-radius: 99px; background: rgba(31, 35, 34, .82); font: 400 12.5px Inter, sans-serif; color: #F4F1EA; letter-spacing: .02em; }
+/* tela baixa (celular com as barras do navegador à mostra): o teaser encolhe para as ações ficarem acima do campo do pedido */
+@media (max-height: 700px) {
+  .teaser { height: 48px; }
+  .teaser img { height: 44px; }
+  .teaser img:nth-child(n) { top: 2px; }
+  .teaser span { top: 11px; }
+}
 .final { margin-top: auto; }
 .principal.final { margin-bottom: 8px; }
 p.final { margin-bottom: 8px; }
@@ -95,7 +107,7 @@ body.ao-vivo #marca, body.ao-vivo #conta { color: #F4F1EA; }
 /* sombra suave no topo: o cabide e a conta se leem sobre foto clara */
 .foto::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 140px; background: linear-gradient(rgba(31, 35, 34, .62), rgba(31, 35, 34, 0)); pointer-events: none; }
 .cartao {
-  position: absolute; top: 0; bottom: 0; left: 0; right: 0; touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  position: absolute; top: 0; bottom: 0; left: 0; right: 0; touch-action: none; user-select: none; -webkit-user-select: none;
   cursor: grab; transition: transform .25s ease-out;
 }
 .cartao.arrastando { transition: none; cursor: grabbing; }
@@ -140,7 +152,7 @@ body.vendendo .topo { position: relative; z-index: 2; align-items: center; }
 /* Movimento: entra em sequência curta quando a vista muda; a foto que sai gira para o lado escolhido. */
 @keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
 #tela.entra .frase, #tela.entra .contagem, #tela.entra .codigo { animation: entrar 240ms ease-out both; animation-delay: calc(var(--i, 0) * 60ms); }
-.camada-fantasma { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3; overflow: hidden; pointer-events: none; }
+.camada-fantasma { position: fixed; top: 0; left: 0; right: 0; bottom: 0; max-width: 430px; margin: 0 auto; z-index: 3; overflow: hidden; pointer-events: none; }
 .fantasma { position: absolute; object-fit: cover; animation: 180ms ease-in forwards; }
 .fantasma.direita { animation-name: sair-direita; }
 .fantasma.esquerda { animation-name: sair-esquerda; }

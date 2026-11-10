@@ -63,3 +63,17 @@ test('ensaiar funciona depois do fim e durante outro drop', async () => {
   await page.getByText('Ensaio do drop').waitFor(); await passar(10000); await page.locator('#drop').waitFor();
   await fechar();
 });
+test('campo em Você: pontuação colada ao texto, sem cortar', async () => {
+  const { page, fechar } = await abrir(); await entrar(page);
+  await page.locator('#conta').click(); await page.getByText('A cor do seu brechó é').waitFor();
+  const medidas = await page.evaluate(() => [...document.querySelectorAll('#tela .campo')].map(c => {
+    const css = getComputedStyle(c), s = document.createElement('span');
+    s.textContent = c.value; s.style.cssText = 'position:absolute;white-space:pre;font:' + css.font + ';letter-spacing:' + css.letterSpacing;
+    document.body.appendChild(s); const largura = s.getBoundingClientRect().width; s.remove();
+    const r = document.createRange(); r.setStart(c.nextSibling, 0); r.setEnd(c.nextSibling, 1);
+    return { valor: c.value, folga: r.getBoundingClientRect().left - (c.getBoundingClientRect().left + largura), cabe: c.scrollWidth <= c.clientWidth };
+  }));
+  assert.equal(medidas.length, 2);
+  for (const m of medidas) assert.ok(m.folga < 4 && m.cabe, JSON.stringify(m));
+  await fechar();
+});

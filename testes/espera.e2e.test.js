@@ -67,3 +67,28 @@ test('foco visível no campo do pedido e na seta', async () => {
   assert.notEqual(await page.getByRole('button', { name: 'Enviar pedido' }).evaluate(el => getComputedStyle(el).outlineStyle), 'none');
   await fechar();
 });
+test('depois de enviar o pedido o teclado fecha e a resposta fica à vista', async () => {
+  const { page, fechar } = await abrir({ largura: 360, altura: 640 }); await entrar(page);
+  for (const [texto, resposta] of [['xyzzy', /^Não entendi/], ['um blazer para a entrevista', /^Anotado:/]]) {
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+    await pedir(page, texto);
+    await page.getByText(resposta).waitFor();
+    assert.notEqual(await page.evaluate(() => document.activeElement.id), 'pedido-campo');
+    const topo = await page.getByText(resposta).evaluate(el => el.getBoundingClientRect().top);
+    assert.ok(topo >= 0 && topo < await page.evaluate(() => innerHeight), 'resposta em ' + topo);
+  }
+  await fechar();
+});
+test('celular de tela baixa: as ações da espera ficam acima do campo do pedido', async () => {
+  for (const [largura, altura] of [[390, 664], [360, 640]]) {
+    const { page, fechar } = await abrir({ largura, altura }); await entrar(page);
+    await pedir(page, 'um blazer para a entrevista de quinta'); await page.getByText(/^Anotado:/).waitFor();
+    await page.evaluate(() => scrollTo(0, 0));
+    const campo = await page.locator('#pedido').evaluate(el => el.getBoundingClientRect().top);
+    for (const alvo of [page.getByRole('button', { name: 'Me acorde cinco minutos antes' }), page.getByRole('link', { name: 'vender uma peça para este drop' }), page.getByRole('button', { name: 'ensaiar o drop agora' })]) {
+      const r = await alvo.evaluate(el => { const b = el.getBoundingClientRect(); return { top: b.top, bottom: b.bottom }; });
+      assert.ok(r.top >= 0 && r.bottom <= campo, largura + 'x' + altura + ': ' + JSON.stringify(r) + ' campo em ' + campo);
+    }
+    await fechar();
+  }
+});

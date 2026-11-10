@@ -1,12 +1,20 @@
 # Brechó Universitário: o drop do campus
 
-Protótipo para o vídeo do MVP (MG900, Empreendedorismo). É um site estático: HTML, CSS e JavaScript puros, sem servidor e sem instalação.
+Protótipo para o vídeo do MVP de MG900 – Empreendedorismo. É um site estático: HTML, CSS e JavaScript puros, sem servidor e sem instalação.
 
 ## Como abrir
 
 - No computador: dois cliques em `index.html` (de preferência no Chrome).
-- No celular: o link que acompanha a entrega.
+- No celular: https://atraquia-beep.github.io/brecho-universitario/
 - A câmera ao vivo só funciona em `https://` ou em `file://` no Chrome. Sem ela, o app usa a peça de exemplo (`fotos/exemplo-venda.jpg`) e o resto do fluxo é igual.
+
+## Antes de gravar
+
+- Abra o link uma vez com internet, para as fotos e as fontes ficarem carregadas.
+- Abra **vender uma peça para este drop** uma vez e permita a câmera: assim a pergunta de permissão não cai dentro da tomada cronometrada.
+- Faça uma tomada de ensaio inteira e depois, em **Você**, **Recomeçar do zero**.
+- Os dias citados no roteiro ("quarta", "terça") são os de uma gravação numa terça; em outros dias eles mudam. Quando o próximo drop está a dois dias ou mais, a espera mostra os dias em vez do relógio correndo: gravando no domingo, na segunda, na terça ou na quarta (antes das 20h), o relógio corre.
+- Numa tela baixa, a espera pode precisar de uma pequena rolagem.
 
 ## Roteiro de gravação sugerido
 
@@ -16,13 +24,13 @@ Protótipo para o vídeo do MVP (MG900, Empreendedorismo). É um site estático:
 2. A espera mostra a contagem e "Deco, catorze peças entram juntas. Cinco são M, na sua pegada."
 3. No campo de baixo, escreva "um blazer para a entrevista de quinta" e envie. Aparece "Anotado: …".
 4. Toque em **vender uma peça para este drop**. O app abre na câmera e o cronômetro corre no topo.
-5. Toque no botão redondo para fotografar. Depois de "Olhando…", o app sugere tipo, tamanho, estado e preço; toque em **Anunciar no drop**.
+5. Aponte a câmera para uma jaqueta jeans (o primeiro palpite é sempre "jaqueta jeans, pouco uso") e toque no botão redondo para fotografar. Com foto de verdade, o palpite muda a cada anúncio novo, a não ser que você recomece do zero; a peça de exemplo sempre ganha o palpite da jaqueta. Depois de "Olhando…", o app sugere tipo, tamanho, estado e preço; toque em **Anunciar no drop**.
 6. Aparece "No drop em N segundos. Sua jaqueta jeans entra quarta, às 20h." Toque em **Voltar**.
 7. Toque em **ensaiar o drop agora**. Em 10 segundos o drop entra no ar.
 8. A primeira peça é o blazer preto, com "Você pediu: um blazer para a entrevista de quinta".
 9. Espere uns 5 segundos: aparece "A Bia, de Nutrição, levou sua jaqueta jeans. Entraram R$ 35 em créditos."
 10. Toque em **É minha** (ou arraste a foto para a direita). A tela "É seu" mostra a retirada, o código e "Seus R$ 35 em créditos já entraram. Faltam R$ 3, pagos na hora."
-11. Toque em **Voltar ao drop**. O drop acaba quando os 10 minutos passam ou quando a pilha esvazia. Para a gravação, o jeito rápido é passar as peças que restam (**passo**, ou arrastar para a esquerda) até aparecer "O drop acabou. Você ficou com uma peça." Toque em **Voltar**.
+11. Toque em **Voltar ao drop**. O drop acaba quando os 10 minutos passam ou quando a pilha esvazia. Os outros alunos levam uma peça a cada 8 segundos, então a pilha também se esvazia sozinha em cerca de 1 min 45 s. Para a gravação, o jeito rápido é passar as peças que restam (**passo**, ou arrastar para a esquerda) até aparecer "O drop acabou. Você ficou com uma peça." Toque em **Voltar**.
 12. Na espera, toque em "Seu blazer preto espera você terça…", depois em **Já retirei** e em **ótimo**: "Obrigado. Uma peça a menos no lixo: Administração chegou a 129."
 13. Toque em "Deco · R$ 0 em créditos" no topo. A área **Você** mostra a jaqueta vendida em créditos, a reserva retirada e "Seu último anúncio levou N s.". Dá para trocar a cor do brechó aqui.
 
@@ -32,8 +40,9 @@ Em **Você**, toque em **Recomeçar do zero** e depois em **sim**. Tudo é apaga
 
 ## Como trocar uma foto
 
-1. Ponha o arquivo novo em `fotos/` (JPEG, de pé, com no máximo uns 1200 px no lado maior).
+1. Ponha o arquivo novo em `fotos/` (JPEG, de pé, com no máximo uns 1200 px no lado maior e menos de 200 KB).
 2. Em `dados.js`, na linha da peça dentro de `CATALOGO`, troque `foto: 'fotos/...'` pelo nome do arquivo e atualize `alt` com uma descrição curta da foto.
+3. Ponha a linha da foto (arquivo e origem) em `fotos/CREDITOS.md`. Os testes conferem o tamanho e o crédito.
 
 Os nomes de vendedores, cursos, notas e números do app são exemplos. Todos ficam em `dados.js` (`CATALOGO`, `COMPRADOR`, `CONTADOR_BASE`, `DROP.online`, `DROP.esperando`).
 
@@ -48,7 +57,7 @@ Os nomes de vendedores, cursos, notas e números do app são exemplos. Todos fic
 | Outro aluno comprando a sua peça | Evento fixo 5 segundos depois de o drop começar |
 | Acordar antes do drop | Só guarda a escolha |
 | Verificar e-mail | Checagem do final do endereço |
-| Catálogo | 14 peças de exemplo, com vendedores fictícios. Pelo menos três peças M, duas P, duas G e uma em PP e GG (com cinco peças M que servem e dois blazers M, três de cada não cabem em 14). O perfil M, vintage e street, até R$ 40 tem exatamente cinco peças que servem, e existem exatamente dois blazers M até R$ 40 |
+| Catálogo | 14 peças de exemplo, com vendedores fictícios |
 
 ## A regra do drop
 
@@ -56,7 +65,7 @@ As peças entram todas juntas, segunda e quarta, às 20h, por 10 minutos. Fora d
 
 Para mudar dias e horário, edite `DROP` em `dados.js`:
 
-- `dias`: dias da semana, de 0 (domingo) a 6 (sábado). `[1, 3]` é segunda e quarta.
+- `dias`: dias da semana, de 0 (domingo) a 6 (sábado), com pelo menos um dia. `[1, 3]` é segunda e quarta.
 - `hora`: hora de início, no relógio do aparelho (`20` é 20h).
 - `duracaoMs`: duração em milissegundos (`600000` são 10 minutos).
 - `ensaioMs`: quanto o ensaio espera antes de abrir (`10000` são 10 segundos).
