@@ -5,7 +5,7 @@ test('abertura: aparece para quem aceita movimento, sai sozinha e um toque pula'
   const ab = page.locator('#abertura');
   await ab.waitFor();
   assert.equal(await ab.getAttribute('aria-hidden'), 'true');
-  assert.equal(await ab.locator('.ab-marca').getAttribute('aria-label'), 'BRECHÓ');
+  assert.equal(await ab.locator('.ab-marca').getAttribute('aria-label'), 'TAKE IT');
   assert.equal(await ab.locator('.ab-pilha img').count(), 7);
   assert.equal(await abrindo(page), true);
   const barra = () => page.locator('meta[name="theme-color"]').getAttribute('content');

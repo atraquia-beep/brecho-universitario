@@ -1,4 +1,4 @@
-const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar } = require('./apoio.js'); const DADOS = require('../dados.js');
+const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, ateOPerfil, entrar } = require('./apoio.js'); const DADOS = require('../dados.js');
 test('identidade: creme e preto, fonte embutida, foco, sem rolagem lateral', async () => {
   const { page, fechar } = await abrir({ largura: 360 });
   const css = (sel, prop) => page.evaluate(([s, p]) => getComputedStyle(document.querySelector(s))[p], [sel, prop]);
@@ -7,9 +7,9 @@ test('identidade: creme e preto, fonte embutida, foco, sem rolagem lateral', asy
   assert.match(await css('.frase', 'fontFamily'), /Inter Tight/);
   const carregadas = await page.evaluate(() => document.fonts.ready.then(() => [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/"/g, ''))));
   assert.ok(carregadas.includes('Inter Tight'));
-  // o nome gigante vai de ponta a ponta da coluna, sem estourar
+  // o nome gigante vai de ponta a ponta da coluna (a caixa das letras passa da tinta por uma folga pequena dos dois lados)
   const t = await page.evaluate(() => { const r = document.createRange(); r.selectNodeContents(document.querySelector('.titulo')); return [r.getBoundingClientRect().width, document.querySelector('.regua').getBoundingClientRect().width]; });
-  assert.ok(t[0] <= t[1] + 1 && t[0] >= t[1] * .94, 'título ' + t[0] + ' numa coluna de ' + t[1]);
+  assert.ok(Math.abs(t[0] - t[1]) <= t[1] * .02, 'título ' + t[0] + ' numa coluna de ' + t[1]);
   assert.ok(await page.locator('#marca svg').isVisible());
   await page.keyboard.press('Tab');
   assert.notEqual(await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle), 'none');
@@ -18,10 +18,10 @@ test('identidade: creme e preto, fonte embutida, foco, sem rolagem lateral', asy
   assert.deepEqual([await css('body', 'backgroundColor'), await css('.frase', 'color')], ['rgb(235, 224, 217)', 'rgb(0, 0, 0)']);
   await fechar();
 });
-test('computador: coluna central com largura de celular', async () => {
-  const { page, fechar } = await abrir({ largura: 1280 });
-  const r = await page.evaluate(() => { const b = document.querySelector('#tela').getBoundingClientRect(); return [b.width, b.left, innerWidth - b.right]; });
-  assert.ok(r[0] >= 360 && r[0] <= 430); assert.ok(Math.abs(r[1] - r[2]) < 2);
+test('tablet em pé: coluna central com largura de celular', async () => {
+  const { page, fechar } = await abrir({ largura: 820, altura: 1180 });
+  const r = await page.evaluate(() => { const b = document.querySelector('#tela').getBoundingClientRect(); return [b.width, b.left, innerWidth - b.right, getComputedStyle(document.querySelector('.lado')).display]; });
+  assert.ok(r[0] >= 360 && r[0] <= 430); assert.ok(Math.abs(r[1] - r[2]) < 2); assert.equal(r[3], 'contents');
   await fechar();
 });
 // nenhuma pontuação depois de uma palavra ou de um campo começa uma linha sozinha
@@ -41,9 +41,11 @@ test('pontuação nunca cai sozinha na linha de baixo', async () => {
   for (const largura of [360, 390]) {
     const { page, passar, fechar } = await abrir({ largura });
     const confere = async onde => assert.deepEqual(await pontuacaoSolta(page), { soltas: [], larga: false }, largura + ' ' + onde);
-    await page.getByLabel('Seu nome').fill('Deco'); await page.getByLabel('Seu e-mail da Unicamp').fill('d000000@dac.unicamp.br');
+    await page.getByLabel('Seu e-mail da Unicamp').fill('d000000@dac.unicamp.br');
+    await confere('e-mail');
+    await ateOPerfil(page); await page.getByLabel('Seu nome').fill('Deco');
     await page.getByRole('button', { name: /^Curso:/ }).click(); await page.getByRole('button', { name: longo, exact: true }).click();
-    await confere('primeira vez');
+    await confere('perfil');
     await entrar(page);
     await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
     await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(1200);

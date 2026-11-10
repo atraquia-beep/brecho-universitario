@@ -1,4 +1,4 @@
-// node testes/capturas.js: grava capturas/<largura>-<tela>.png das dez telas, em 360 e 390 px.
+// node testes/capturas.js: grava capturas/<largura>-<tela>.png das dez telas, no celular (360 e 390 px) e no computador (1280 × 720).
 // Sai com erro se alguma tela rolar para o lado. Não faz parte da suíte (o nome não termina em .test.js).
 const fs = require('node:fs');
 const path = require('node:path');
@@ -8,10 +8,10 @@ const { AGORA, entrar } = require('./apoio.js');
 const PASTA = path.resolve(__dirname, '..', 'capturas');
 const estouradas = [], erros = [];
 
-async function capturar(largura) {
+async function capturar(largura, altura) {
   // como abrir() de apoio.js, mas com deviceScaleFactor 2
   const browser = await chromium.launch();
-  const context = await browser.newContext({ viewport: { width: largura, height: 844 }, deviceScaleFactor: 2, timezoneId: 'America/Sao_Paulo', locale: 'pt-BR', reducedMotion: 'reduce' });
+  const context = await browser.newContext({ viewport: { width: largura, height: altura }, deviceScaleFactor: 2, timezoneId: 'America/Sao_Paulo', locale: 'pt-BR', reducedMotion: 'reduce' });
   const page = await context.newPage();
   page.on('pageerror', e => erros.push(largura + ': ' + e.message));
   await page.clock.install({ time: AGORA });
@@ -61,9 +61,9 @@ async function capturar(largura) {
 
 (async () => {
   fs.mkdirSync(PASTA, { recursive: true });
-  for (const largura of [360, 390]) await capturar(largura);
+  for (const [largura, altura] of [[360, 844], [390, 844], [1280, 720]]) await capturar(largura, altura);
   if (erros.length) { console.error('Erros na página: ' + erros.join('; ')); process.exit(1); }
   if (estouradas.length) { console.error('Rolagem horizontal em: ' + estouradas.join(', ')); process.exit(1); }
-  console.log('20 capturas em ' + PASTA);
+  console.log('30 capturas em ' + PASTA);
   process.exit(0); // process.exit: o after() de apoio.js não mexe no código de saída
 })().catch(e => { console.error(e); process.exit(1); });

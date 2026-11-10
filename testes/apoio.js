@@ -32,11 +32,24 @@ async function abrir({ largura = 390, altura = 844, hash = '', antes, movimento 
 
 const PERFIL_DE_TESTE = { nome: 'Deco', tamanho: 'M', pegadas: ['vintage', 'street'], teto: 40, curso: 'Administração', email: 'd000000@dac.unicamp.br' };
 
-// Preenche a primeira vez e espera a conta aparecer.
+// Passa pelo e-mail e pelo código (colado de uma vez) e para na frase do perfil. Quem já está nela fica onde está.
+async function ateOPerfil(page, email = PERFIL_DE_TESTE.email) {
+  if (await page.getByLabel('Seu nome').count()) return;
+  await page.getByLabel('Seu e-mail da Unicamp').fill(email);
+  await page.getByRole('button', { name: 'Receber o código' }).click();
+  await page.getByLabel('Dígito 1 de 4').fill('4815');
+  // quem aceita movimento espera 1,5 s as células girarem, se juntarem e virarem o visto; o padrão dos testes segue na hora, sem mexer no relógio.
+  // 1600 e não 1500: o relógio segue alinhado ao tique de 200 ms, e "passar(10000)" depois de ensaiar ainda cai no drop
+  if (await page.locator('.digitos.confere').count()) await page.clock.runFor(1600);
+  await page.getByLabel('Seu nome').waitFor();
+}
+
+// Faz a entrada inteira (e-mail, código, perfil) e espera a conta aparecer.
 async function entrar(page, perfil = {}) {
   const p = { ...PERFIL_DE_TESTE, ...perfil };
   const botao = nome => page.getByRole('button', { name: nome });
   const opcao = nome => page.locator('.opcoes').getByRole('button', { name: nome, exact: true });
+  await ateOPerfil(page, p.email);
   await page.getByLabel('Seu nome').fill(p.nome);
   await botao(/^Tamanho:/).click(); await opcao(p.tamanho).click();
   await botao(/^Pegada:/).click();
@@ -45,7 +58,6 @@ async function entrar(page, perfil = {}) {
   await opcao('pronto').click();
   await botao(/^Teto:/).click(); await opcao(p.teto === null ? 'sem teto' : 'até ' + Logica.dinheiro(p.teto)).click();
   await botao(/^Curso:/).click(); await opcao(p.curso).click();
-  await page.getByLabel('Seu e-mail da Unicamp').fill(p.email);
   await botao('Entrar').click();
   await page.locator('#conta').filter({ hasText: 'em créditos' }).waitFor();
 }
@@ -59,4 +71,4 @@ async function aoVivo(page, passar) {
   await page.locator('#drop').waitFor();
 }
 
-module.exports = { AGORA, abrir, entrar, salvo, aoVivo };
+module.exports = { AGORA, abrir, ateOPerfil, entrar, salvo, aoVivo };

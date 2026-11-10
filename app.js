@@ -187,6 +187,30 @@ function letras(tag, classe, texto) {
 }
 const regua = () => { const r = el('i', { className: 'regua' }); r.setAttribute('aria-hidden', 'true'); return r; };
 
+// Um lado da tela larga: palco (esquerda), painel (direita) ou pe (embaixo do palco). No celular o grupo some e os nós seguem em fila (estilo.css).
+const lado = (classe, ...nos) => { const d = el('div', { className: 'lado ' + classe }); d.append(...nos); return d; };
+
+// Palavra gigante de ponta a ponta: mede a 100 px e escala para a largura pedida. O nome pode mudar; o tamanho se ajusta.
+// A tinta da primeira e da última letra não encosta na caixa: as folgas saem da conta.
+// Sem largura, vale a da própria caixa e a palavra anda até encostar na margem esquerda.
+function encaixar(no, largura) {
+  no.style.fontSize = '100px';
+  no.style.marginLeft = '';
+  const rente = !largura, r = document.createRange(), css = getComputedStyle(no), ctx = document.createElement('canvas').getContext('2d'), t = no.getAttribute('aria-label');
+  r.selectNodeContents(no);
+  ctx.font = css.fontWeight + ' 100px ' + css.fontFamily;
+  const a = ctx.measureText(t.charAt(0)), z = ctx.measureText(t.slice(-1));
+  const esq = -a.actualBoundingBoxLeft || 0, dir = z.width - z.actualBoundingBoxRight + parseFloat(css.letterSpacing) || 0;
+  const k = (largura || no.clientWidth) / (r.getBoundingClientRect().width - esq - dir);
+  no.style.fontSize = Math.floor(1000 * k) / 10 + 'px';
+  if (rente) no.style.marginLeft = -esq * k + 'px';
+}
+function encaixarTudo() {
+  const t = document.querySelector('h1.titulo');
+  if (t) encaixar(t);
+  document.querySelectorAll('.cortina .ab-marca').forEach(m => encaixar(m, Math.min(innerWidth * .8, innerHeight * 1.3)));
+}
+
 const textoDoTeto = t => t === null ? 'sem teto' : 'até ' + Logica.dinheiro(t);
 
 // As duas frases do perfil. aoMudar(campo, valor) decide se redesenha; a tela de Você grava a cada troca.
@@ -205,37 +229,118 @@ function frasesDoPerfil(perfil, aoMudar) {
 const perfilPadrao = () => ({ ...DADOS.PERFIL_PADRAO, pegadas: DADOS.PERFIL_PADRAO.pegadas.slice() });
 let rascunho = perfilPadrao();
 
+// ---------- Entrada ----------
+// Três passos: e-mail da Unicamp, código de quatro dígitos e a frase do perfil. O código é simulado: nenhum e-mail sai, qualquer um entra.
+let acesso = 'email';     // email, codigo ou perfil
+let acessoTimer = null;   // os 1,5 s em que as células giram, se juntam e viram o visto (só para quem aceita movimento)
+
+function passosDaEntrada() {
+  const p = el('p', { className: 'passos lab' });
+  [['email', 'E-mail'], ['codigo', 'Código'], ['perfil', 'Você']].forEach((x, i) => {
+    const s = el('span', { textContent: '0' + (i + 1) + ' ' + x[1] });
+    if (x[0] === acesso) s.setAttribute('aria-current', 'step');
+    p.appendChild(s);
+  });
+  return p;
+}
+
+// Quatro células de um dígito: digitar anda para a frente, apagar volta, colar espalha. Cheias, chamam aoCompletar.
+function celulasDoCodigo(aoCompletar) {
+  const grupo = el('div', { className: 'digitos' });
+  grupo.setAttribute('role', 'group');
+  grupo.setAttribute('aria-label', 'Código de quatro dígitos');
+  const cs = [0, 1, 2, 3].map(i => {
+    const c = el('input', { className: 'digito', type: 'text', inputMode: 'numeric', autocomplete: i ? 'off' : 'one-time-code' });
+    c.setAttribute('aria-label', 'Dígito ' + (i + 1) + ' de 4');
+    c.style.setProperty('--n', i);
+    c.addEventListener('focus', () => c.select());
+    c.addEventListener('input', () => {
+      const d = c.value.replace(/\D/g, '').slice(0, 4 - i);
+      c.value = '';
+      d.split('').forEach((x, k) => { cs[i + k].value = x; });
+      if (d) cs[Math.min(i + d.length, 3)].focus();
+      if (cs.every(x => x.value)) aoCompletar(grupo);
+    });
+    c.addEventListener('keydown', e => { if (e.key === 'Backspace' && !c.value && i) { cs[i - 1].value = ''; cs[i - 1].focus(); } });
+    return c;
+  });
+  const visto = el('span', { className: 'visto' });
+  visto.setAttribute('aria-hidden', 'true');
+  visto.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  grupo.append(...cs, visto);
+  return grupo;
+}
+
 function primeiraVez() {
   const aviso = frase('');
   aviso.hidden = true;
   const dizer = texto => { aviso.textContent = texto; aviso.hidden = false; };
-  const campoDe = rotulo => document.querySelector('input[aria-label="' + rotulo + '"]');
-  const entrar = () => {
-    const nome = rascunho.nome.trim(), email = rascunho.email.trim();
-    if (!nome) { dizer('Como eu te chamo?'); campoDe('Seu nome').focus(); return; }
-    if (!Logica.emailValido(email)) { dizer('Preciso de um e-mail da Unicamp para deixar você entrar.'); campoDe('Seu e-mail da Unicamp').focus(); return; }
-    mudar({ ...estado, perfil: { ...rascunho, nome, email } });
+  // troca de passo: redesenha, faz o painel chegar e leva o foco ao primeiro campo
+  const ir = (passo, foco) => {
+    clearTimeout(acessoTimer); acessoTimer = null;
+    acesso = passo;
+    desenhar();
+    document.querySelector('#tela .painel').classList.add('chega');
+    document.querySelector(foco).focus();
   };
-  const aoMudar = (chave, valor) => {
-    rascunho[chave] = valor;
-    // digitar e ligar/desligar pegadas atualizam no lugar; o resto reconstrói a tela
-    if (!['nome', 'email', 'pegadas'].includes(chave)) desenhar();
-  };
-  const frases = frasesDoPerfil(rascunho, aoMudar);
-  frases.forEach(f => f.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); })));
   const d = DADOS.DROP, ficha = el('p', { className: 'ficha lab' });
-  ficha.append(el('span', { textContent: 'Brechó Universitário' }), el('span', { textContent: 'Limeira · ' + new Date().getFullYear() }));
+  ficha.append(el('span', { textContent: 'O brechó do campus' }), el('span', { textContent: 'Limeira · ' + new Date().getFullYear() }));
   const fecho = el('p', { className: 'fecho', textContent: 'Roupa boa não acaba.' });
   fecho.appendChild(el('span', { textContent: 'Troca de dono.' }));
+  let passo;
+  if (acesso === 'email') {
+    const email = campo(rascunho.email, 'Seu e-mail da Unicamp', 'Seu e-mail da Unicamp', v => { rascunho.email = v; }, 'email');
+    const pedir = () => {
+      const valor = rascunho.email.trim();
+      if (!Logica.emailValido(valor)) { dizer('Preciso de um e-mail da Unicamp para deixar você entrar.'); email.focus(); return; }
+      rascunho.email = valor;
+      ir('codigo', '.digito');
+    };
+    email.addEventListener('keydown', e => { if (e.key === 'Enter') pedir(); });
+    passo = [
+      frase('Oi. O Take It é o brechó do campus de Limeira, só entre alunos.'),
+      frase('As peças entram todas juntas, ' + d.dias.map(n => Logica.DIAS_DA_SEMANA[n]).join(' e ') + ', às ' + d.hora + 'h. São '
+        + d.duracaoMs / 60000 + ' minutos. Quem tocar primeiro leva.'),
+      frase('Meu e-mail da Unicamp é ', email, '.'), aviso,
+      principal('Receber o código', pedir),
+      apoio('Sem senha. Mando um código de quatro dígitos para esse e-mail.'),
+    ];
+  } else if (acesso === 'codigo') {
+    const nota = apoio('Demonstração: nenhum e-mail sai daqui e qualquer código entra. ', botaoPalavra('trocar o e-mail', () => ir('email', '.campo')), '.');
+    const conferir = grupo => {
+      if (acessoTimer) return;
+      const seguir = () => ir('perfil', 'input[aria-label="Seu nome"]');
+      // a espera existe só para a animação: quem pede menos movimento segue na hora
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { seguir(); return; }
+      grupo.classList.add('confere');
+      grupo.querySelectorAll('input').forEach(c => { c.readOnly = true; c.blur(); });
+      nota.textContent = 'Conferindo…';
+      acessoTimer = setTimeout(seguir, 1500);
+    };
+    passo = [frase('Mandei quatro dígitos para ' + rascunho.email + '. Digite aqui:'), celulasDoCodigo(conferir), nota];
+  } else {
+    const entrar = () => {
+      const nome = rascunho.nome.trim();
+      if (!nome) { dizer('Como eu te chamo?'); document.querySelector('input[aria-label="Seu nome"]').focus(); return; }
+      mudar({ ...estado, perfil: { ...rascunho, nome } });
+    };
+    const aoMudar = (chave, valor) => {
+      rascunho[chave] = valor;
+      // digitar e ligar/desligar pegadas atualizam no lugar; o resto reconstrói a tela
+      if (!['nome', 'pegadas'].includes(chave)) desenhar();
+    };
+    const perfil = frasesDoPerfil(rascunho, aoMudar)[0];
+    perfil.querySelector('input').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+    passo = [
+      frase('Código certo. Agora me conte de você:'), perfil, aviso,
+      principal('Entrar', entrar),
+      apoio('Toque numa palavra sublinhada para mudar. Dá para trocar tudo depois.'),
+    ];
+  }
   return [
-    letras('h1', 'titulo', DADOS.MARCA), regua(), ficha,
-    frase('Oi. Este é o brechó do campus de Limeira, só entre alunos.'),
-    frase('As peças entram todas juntas, ' + d.dias.map(n => Logica.DIAS_DA_SEMANA[n]).join(' e ') + ', às ' + d.hora + 'h. São '
-      + d.duracaoMs / 60000 + ' minutos. Quem tocar primeiro leva.'),
-    ...frases, aviso,
-    principal('Entrar', entrar),
-    apoio('Toque numa palavra sublinhada para mudar. Dá para trocar tudo depois.'),
-    fecho, apoio('Feito por alunos, para alunos.'),
+    lado('palco', letras('h1', 'titulo', DADOS.MARCA), regua(), ficha),
+    lado('painel', passosDaEntrada(), ...passo),
+    lado('pe', fecho, apoio('Feito por alunos, para alunos.')),
   ];
 }
 
@@ -330,8 +435,11 @@ function telaEspera(sit) {
   acordar.classList.add('final');
   const vender = Object.assign(document.createElement('a'), { className: 'palavra', href: '#/vender', textContent: 'vender uma peça para este drop' });
   const ensaiar = botaoPalavra('ensaiar o drop agora', ensaiarAgora);
-  return [...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, frase('Cada peça é única. Quem tocar primeiro leva.'), fotos, acordar,
-    apoio(DADOS.DROP.esperando + ' alunos esperando · ', vender, ' · ', ensaiar)];
+  return [
+    lado('palco', ...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, frase('Cada peça é única. Quem tocar primeiro leva.')),
+    lado('painel', fotos),
+    lado('pe', acordar, apoio(DADOS.DROP.esperando + ' alunos esperando · ', vender, ' · ', ensaiar)),
+  ];
 }
 
 // ---------- Drop no ar ----------
@@ -446,7 +554,9 @@ function telaNoAr(sit) {
   const pl = Logica.placar(estado, DADOS.CATALOGO);
   for (let i = 0; i < pl.total; i++) barra.appendChild(el('i', { className: i < pl.foram ? 'f' : '' }));
   const folha = el('div', { className: 'folha' });
-  folha.append(...linhas, aviso, acoes, barra, apoio(el('span', { id: 'placar', textContent: placarTexto() })));
+  const teclas = apoio('No teclado: ← passa, → é minha.');
+  teclas.classList.add('largo');
+  folha.append(...linhas, aviso, acoes, barra, apoio(el('span', { id: 'placar', textContent: placarTexto() })), teclas);
 
   const drop = el('section', { id: 'drop' });
   drop.setAttribute('aria-label', 'Drop no ar');
@@ -457,11 +567,10 @@ function telaNoAr(sit) {
 function telaFim() {
   const n = estado.reservas.filter(r => r.drop === estado.drop.inicio).length;
   const proximo = Logica.dropDoCalendario(estado.drop.inicio + DADOS.DROP.duracaoMs);
-  return [
+  return [lado('palco',
     frase('O drop acabou. ' + (n ? 'Você ficou com ' + Logica.extenso(n, 'f') + (n === 1 ? ' peça.' : ' peças.') : 'Você não pegou nada desta vez.')),
     frase('Próximo drop: ' + Logica.diaDaSemana(proximo) + ', ' + DADOS.DROP.hora + 'h.'),
-    principal('Voltar', () => mudar(Logica.fecharDrop(estado))),
-  ];
+    principal('Voltar', () => mudar(Logica.fecharDrop(estado))))];
 }
 
 function telaPrincipal() {
@@ -485,15 +594,17 @@ function telaSua() {
   const r = estado.reservas.find(x => x.pecaId === id), peca = r && pecaPorId(id);
   if (!peca) return false;
   const v = peca.vendedor, voltar = () => { location.hash = '#/'; };
+  // na tela larga, a foto da peça ocupa o lado direito
+  const retrato = lado('painel', el('img', { className: 'retrato largo', src: peca.foto, alt: '' }));
   if (r.retirada) {
     const curso = estado.perfil.curso === 'outro curso' ? 'Seu curso' : estado.perfil.curso;
-    return [focavel(frase('Obrigado. Uma peça a menos no lixo: ' + curso + ' chegou a ' + Logica.contadorDoCurso(estado) + '.')), principal('Voltar', voltar)];
+    return [lado('palco', focavel(frase('Obrigado. Uma peça a menos no lixo: ' + curso + ' chegou a ' + Logica.contadorDoCurso(estado) + '.')), principal('Voltar', voltar)), retrato];
   }
   if (comoFoi === id) {
     const notas = ['ótimo', 'ok', 'ruim'].map(n => botaoPalavra(n, () => mudar(Logica.confirmarRetirada(estado, id, n))));
     const pergunta = focavel(frase('Como foi com ' + v.artigo + ' ' + v.nome + '?'));
     pergunta.id = 'como-foi';
-    return [pergunta, frase(notas[0], ', ', notas[1], ' ou ', notas[2], '.')];
+    return [lado('palco', pergunta, frase(notas[0], ', ', notas[1], ' ou ', notas[2], '.')), retrato];
   }
   const f = feminina(peca);
   const janela = palavra(r.janela, 'Retirada', Logica.janelasDeRetirada(new Date()), j => mudar(Logica.trocarJanela(estado, id, j)));
@@ -508,8 +619,9 @@ function telaSua() {
   const fundo = apoio('Mudou de ideia? ', cancelar, '.');
   fundo.classList.add('final');
   return [
-    frase((f ? 'É sua. A ' : 'É seu. O ') + peca.nome.toLowerCase() + ' d' + v.artigo + ' ' + v.nome + ' espera você ', janela, ', no ponto da FCA. Mostre este código:'),
-    codigo, regua(), frase(pagamento), acao, fundo,
+    lado('palco', frase((f ? 'É sua. A ' : 'É seu. O ') + peca.nome.toLowerCase() + ' d' + v.artigo + ' ' + v.nome + ' espera você ', janela, ', no ponto da FCA. Mostre este código:'),
+      codigo, regua(), frase(pagamento)),
+    lado('pe', acao, fundo), retrato,
   ];
 }
 
@@ -629,15 +741,17 @@ function telaVender() {
       ...(v.erro ? [apoio('Não consegui abrir essa foto. Tente outra ou use a peça de exemplo.')] : []),
       apoio(botaoPalavra('escolher uma foto', () => entrada.click()), entrada));
     visor.appendChild(rodape);
-    return [visor];
+    const dica = frase('Fotografe a peça. Eu digo o que é e sugiro o preço.');
+    dica.classList.add('largo');
+    return [lado('palco', visor), lado('painel', dica)];
   }
   visor.appendChild(el('img', { id: 'visor', src: v.foto, alt: 'A foto da sua peça' }));
-  if (v.passo === 'olhando') { rodape.appendChild(frase('Olhando…')); visor.appendChild(rodape); return [visor]; }
+  if (v.passo === 'olhando') { rodape.appendChild(frase('Olhando…')); visor.appendChild(rodape); return [lado('palco', visor)]; }
   const etiquetas = el('div', { className: 'etiquetas' });
   etiquetas.append(el('span', { className: 'etiqueta', textContent: a.tipo + ' · ' + a.tamanho + ' · ' + a.estado }),
     el('span', { className: 'etiqueta grande', textContent: din(a.preco) }));
   visor.appendChild(etiquetas);
-  if (v.passo === 'publicado') return [visor, frase(v.publicado), principal('Voltar', () => { location.hash = '#/'; })];
+  if (v.passo === 'publicado') return [lado('palco', visor), lado('painel', frase(v.publicado), principal('Voltar', () => { location.hash = '#/'; }))];
   const faixa = Logica.sugerirPreco(a.tipo, a.estado);
   const precos = [-10, -5, 0, 5, 10].map(d => faixa.sugerido + d).filter(p => p >= 5);
   const valor = Logica.valorVenda(a.preco);
@@ -645,7 +759,7 @@ function telaVender() {
   const trocar = mudanca => { Object.assign(a, mudanca); desenhar(); };
   // tipo e estado refazem a faixa e voltam o preço ao sugerido
   const refazer = mudanca => { Object.assign(a, mudanca); trocar({ preco: Logica.sugerirPreco(a.tipo, a.estado).sugerido }); };
-  return [visor,
+  return [lado('palco', visor), lado('painel',
     frase('Parece ' + DADOS.TIPOS[a.tipo].artigo + ' ', palavra(a.tipo, 'Tipo', Object.keys(DADOS.TIPOS), t => refazer({ tipo: t })),
       ', tamanho ', palavra(a.tamanho, 'Tamanho', DADOS.TAMANHOS, t => trocar({ tamanho: t })),
       ', ', palavra(a.estado, 'Estado', DADOS.ESTADOS, e => refazer({ estado: e })),
@@ -653,7 +767,7 @@ function telaVender() {
       palavra(din(a.preco), 'Preço', precos.map(din), p => trocar({ preco: precos[precos.map(din).indexOf(p)] })), '.'),
     frase('Vendendo, prefiro ', palavra(receber(a.receber), 'Receber', [receber('creditos'), receber('pix')],
       r => trocar({ receber: r === receber('pix') ? 'pix' : 'creditos' })), '.'),
-    principal('Anunciar no drop', anunciarVenda)];
+    principal('Anunciar no drop', anunciarVenda))];
 }
 
 // ---------- Você ----------
@@ -663,7 +777,7 @@ function recomecar() {
   try { localStorage.removeItem(CHAVE); } catch (e) { /* sem armazenamento: nada a apagar */ }
   estado = Logica.estadoInicial();
   rascunho = perfilPadrao();
-  comoFoi = null; naoEntendi = false; apagando = false; ultimaTela = null; pecaNaTela = null;
+  comoFoi = null; naoEntendi = false; apagando = false; ultimaTela = null; pecaNaTela = null; acesso = 'email';
   clearTimeout(avisoTimer);
   document.getElementById('pedido-campo').value = '';
   aplicarRealce();
@@ -701,14 +815,13 @@ function telaVoce() {
   nao.id = 'nao'; recomeco.id = 'recomecar';
   const fim = apagando ? [frase('Apagar tudo e começar de novo?'), frase(botaoPalavra('sim', recomecar), ' ou ', nao, '.')] : [apoio(recomeco)];
   return [
-    ...frasesDoPerfil(estado.perfil, aoMudar),
-    frase('Você tem ' + din(estado.creditos) + ' em créditos.'),
-    rotulo('Suas peças'), ...pecas,
-    rotulo('Suas reservas'), ...(reservas.length ? reservas : [frase('Nenhuma reserva por enquanto.')]),
-    ...(estado.ultimoAnuncioSeg != null ? [frase('Seu último anúncio levou ' + estado.ultimoAnuncioSeg + ' s.')] : []),
-    frase('A cor do seu brechó é ', amostra, '.'),
-    apoio(botaoPalavra('ensaiar o drop agora', ensaiarAgora)),
-    ...fim,
+    lado('palco', ...frasesDoPerfil(estado.perfil, aoMudar),
+      frase('Você tem ' + din(estado.creditos) + ' em créditos.'),
+      frase('A cor do seu brechó é ', amostra, '.')),
+    lado('painel', rotulo('Suas peças'), ...pecas,
+      rotulo('Suas reservas'), ...(reservas.length ? reservas : [frase('Nenhuma reserva por enquanto.')]),
+      ...(estado.ultimoAnuncioSeg != null ? [frase('Seu último anúncio levou ' + estado.ultimoAnuncioSeg + ' s.')] : [])),
+    lado('pe', apoio(botaoPalavra('ensaiar o drop agora', ensaiarAgora)), ...fim),
   ];
 }
 
@@ -733,6 +846,7 @@ function cortina(id, texto) {
   no.addEventListener('click', tirar);
   setTimeout(tirar, 5000); // reserva: uma aba em segundo plano pode não avisar o fim da animação
   document.body.appendChild(no);
+  encaixarTudo();
   return no;
 }
 
@@ -782,6 +896,7 @@ function desenhar() {
   document.body.classList.toggle('com-pedido', comPedido);
   document.body.classList.toggle('ao-vivo', principalNa('no-ar'));
   document.body.classList.toggle('vendendo', rota === rotas.vender);
+  document.body.classList.toggle('entrada', !estado.perfil);
   // o passo dentro da rota também é vista nova; trocar uma palavra no mesmo passo, não
   const reserva = rota === rotas.sua && estado.reservas.find(x => x.pecaId === location.hash.split('/')[2]);
   const vista = (estado.perfil ? parte : 'primeira') + '|' + (rota === rotas[''] ? ultimaTela + (ultimaTela === 'no-ar' ? pecaNaTela.id : '')
@@ -791,7 +906,12 @@ function desenhar() {
   tela.classList.toggle('entra', vista !== ultimaVista);
   ultimaVista = vista;
   tela.textContent = '';
-  nos.forEach((n, i) => { n.style.setProperty('--i', i); tela.appendChild(n); });
+  let i = 0; // a ordem de entrada conta os nós de dentro de cada lado
+  nos.forEach(n => {
+    tela.appendChild(n);
+    (n.classList.contains('lado') ? Array.prototype.slice.call(n.children) : [n]).forEach(f => f.style.setProperty('--i', i++));
+  });
+  encaixarTudo();
   if (rotuloParaFocar) {
     const alvo = Array.prototype.find.call(tela.querySelectorAll('button.palavra'), b => (b.getAttribute('aria-label') || '').indexOf(rotuloParaFocar + ': ') === 0);
     if (alvo) alvo.focus();
@@ -858,6 +978,8 @@ document.getElementById('pedido').addEventListener('submit', e => {
   scrollTo(0, 0);
 });
 document.addEventListener('touchstart', () => {}, { passive: true }); // o Safari do iPhone só mostra :active (o toque do botão) com um ouvinte de toque
+window.addEventListener('resize', encaixarTudo);
+document.fonts.load('700 100px "Inter Tight"').then(encaixarTudo, () => {}); // antes de a fonte chegar a medida sai com a fonte reserva
 aplicarRealce();
 abertura();
 atualizarConta();

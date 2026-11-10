@@ -4,7 +4,7 @@ const DADOS = {
   TETOS: [20, 40, 60, 80, null],
   ESTADOS: ['novo com etiqueta', 'pouco uso', 'usado'],
   CURSOS: ['Administração', 'Administração Pública', 'Ciências do Esporte', 'Engenharia de Manufatura', 'Engenharia de Produção', 'Nutrição', 'Engenharia Ambiental', 'Engenharia de Telecomunicações', 'Engenharia de Transportes', 'Sistemas de Informação', 'Análise e Desenvolvimento de Sistemas', 'outro curso'],
-  MARCA: 'BRECHÓ',
+  MARCA: 'TAKE IT',
   CORES: [{ nome: 'vermelho', hex: '#FF0000' }, { nome: 'verde', hex: '#2FCB6E' }, { nome: 'rosa', hex: '#FF6FAE' }, { nome: 'azul', hex: '#5B8CFF' }, { nome: 'amarelo', hex: '#FFD21F' }],
   TIPOS: {
     'jaqueta jeans': { artigo: 'uma', genero: 'f', sinonimos: ['jaqueta'], faixa: [30, 40] },

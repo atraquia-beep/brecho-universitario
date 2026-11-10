@@ -1,28 +1,32 @@
-# Brechó Universitário: o drop do campus
+# Take It: o drop do campus
 
-Protótipo para o vídeo do MVP de MG900 – Empreendedorismo. É um site estático: HTML, CSS e JavaScript puros, sem servidor e sem instalação.
+Protótipo do brechó digital universitário para o vídeo do MVP de MG900 – Empreendedorismo. É um site estático: HTML, CSS e JavaScript puros, sem servidor e sem instalação.
+
+"Take It" é o nome escolhido pelo André em 10/11/2026: o "leva" de "quem tocar primeiro leva", em inglês. Se um dia mudar, veja **Como trocar o nome**.
 
 ## Como abrir
 
 - No computador: dois cliques em `index.html` (de preferência no Chrome).
-- No celular: https://atraquia-beep.github.io/brecho-universitario/
+- No celular ou no computador, pelo link publicado. O endereço antigo (https://atraquia-beep.github.io/brecho-universitario/) mostra a versão anterior, ainda com o nome Brechó, até a publicação nova sair.
+- O mesmo endereço serve aos dois: em janela com 900 px ou mais de largura o app abre em dois lados (versão de computador); abaixo disso, na coluna do celular.
 - A câmera ao vivo só funciona em `https://` ou em `file://` no Chrome. Sem ela, o app usa a peça de exemplo (`fotos/exemplo-venda.jpg`) e o resto do fluxo é igual.
 
 ## Antes de gravar
 
 - Abra o link uma vez com internet, para as fotos e a fonte ficarem carregadas.
-- A abertura ("BRECHÓ" subindo sobre as fotos, com o contador até 100) roda sozinha por uns 4 segundos toda vez que a página é aberta ou recarregada. Um toque pula. Para a tomada começar por ela, recarregue a página com a gravação já rodando.
+- A abertura ("TAKE IT" subindo sobre as fotos, com o contador até 100) roda sozinha por uns 4 segundos toda vez que a página é aberta ou recarregada. Um toque pula. Para a tomada começar por ela, recarregue a página com a gravação já rodando.
 - Se o celular estiver com **Reduzir movimento** ligado (Acessibilidade), o app não mostra a abertura, a cortina "AO VIVO" nem as entradas animadas. Desligue para gravar.
 - Abra **vender uma peça para este drop** uma vez e permita a câmera: assim a pergunta de permissão não cai dentro da tomada cronometrada.
 - Faça uma tomada de ensaio inteira e depois, em **Você**, **Recomeçar do zero**.
 - Os dias citados no roteiro ("quarta", "terça") são os de uma gravação numa terça; em outros dias eles mudam. Quando o próximo drop está a dois dias ou mais, a espera mostra os dias em vez do relógio correndo: gravando no domingo, na segunda, na terça ou na quarta (antes das 20h), o relógio corre.
 - Numa tela baixa, a espera pode precisar de uma pequena rolagem.
+- No computador, uma janela de 1280 × 720 mostra todas as telas do roteiro sem rolar. No drop, a seta para a esquerda passa a peça e a seta para a direita pega.
 
 ## Roteiro de gravação sugerido
 
 É o mesmo roteiro do teste `testes/roteiro.e2e.test.js`, na mesma ordem. Anote o pedido do blazer **antes** de vender: assim a jaqueta do catálogo não aparece na hora em que a Bia leva a sua.
 
-1. A abertura passa sozinha e cai na capa preta, com "BRECHÓ" de ponta a ponta. Preencha a frase: nome Deco, tamanho M, vintage e street, até R$ 40, Administração e um e-mail `@dac.unicamp.br`. Toque em **Entrar**.
+1. A abertura passa sozinha e cai na capa preta, com "TAKE IT" de ponta a ponta. A entrada tem três passos. **E-mail**: escreva um e-mail `@dac.unicamp.br` e toque em **Receber o código**. **Código**: digite quatro dígitos quaisquer; as células giram, se juntam e viram o visto. **Você**: preencha a frase (nome Deco, tamanho M, vintage e street, até R$ 40, Administração) e toque em **Entrar**.
 2. A espera mostra a contagem e "Deco, catorze peças entram juntas. Cinco são M, na sua pegada."
 3. No campo de baixo, escreva "um blazer para a entrevista de quinta" e envie. Aparece "Anotado: …".
 4. Toque em **vender uma peça para este drop**. O app abre na câmera e o cronômetro corre no topo.
@@ -48,9 +52,17 @@ Em **Você**, toque em **Recomeçar do zero** e depois em **sim**. Tudo é apaga
 
 Os nomes de vendedores, cursos, notas e números do app são exemplos. Todos ficam em `dados.js` (`CATALOGO`, `COMPRADOR`, `CONTADOR_BASE`, `DROP.online`, `DROP.esperando`).
 
+## Como trocar o nome
+
+1. Em `dados.js`, troque `MARCA` (em maiúsculas). O tamanho das letras na capa e na abertura se ajusta sozinho ao nome novo.
+2. Em `app.js`, troque a frase "Oi. O Take It é o brechó do campus de Limeira, só entre alunos."
+3. Em `index.html`, troque o `<title>`.
+
+Os testes citam o nome em três lugares (`testes/primeira-vez.e2e.test.js` e `testes/abertura.e2e.test.js`).
+
 ## A cara do app
 
-O visual segue o template Velvet (loja de roupas) do acervo de templates: creme `#EBE0D9`, preto e vermelho, letras gigantes, botão em bloco e movimento com freio longo. Nenhum arquivo do template foi copiado: tudo foi reescrito em HTML, CSS e JavaScript puros, dentro de `estilo.css` e `app.js`. A fonte é a Inter Tight, embutida em `fontes/` com a licença dela (`fontes/OFL.txt`, SIL OFL 1.1).
+O visual segue o template Velvet (loja de roupas) do acervo de templates: creme `#EBE0D9`, preto e vermelho, letras gigantes, botão em bloco e movimento com freio longo. A entrada em três passos segue o template "Login fintech" do mesmo acervo: tela dividida no computador e as células do código que giram, se juntam e viram o visto. Nenhum arquivo dos templates foi copiado: tudo foi reescrito em HTML, CSS e JavaScript puros, dentro de `estilo.css` e `app.js`. A fonte é a Inter Tight, embutida em `fontes/` com a licença dela (`fontes/OFL.txt`, SIL OFL 1.1).
 
 ## O que é simulado
 
@@ -62,7 +74,7 @@ O visual segue o template Velvet (loja de roupas) do acervo de templates: creme 
 | Entender o pedido | Busca por palavras-chave sobre o catálogo de exemplo |
 | Outro aluno comprando a sua peça | Evento fixo 5 segundos depois de o drop começar |
 | Acordar antes do drop | Só guarda a escolha |
-| Verificar e-mail | Checagem do final do endereço |
+| Código por e-mail | Nenhum e-mail é enviado e qualquer código de quatro dígitos entra (a tela do código avisa). O e-mail só passa pela checagem do final do endereço |
 | Catálogo | 14 peças de exemplo, com vendedores fictícios |
 
 ## A regra do drop
@@ -86,4 +98,4 @@ node --test --test-concurrency=2 "testes/*.test.js"
 
 Um arquivo só: `node --test testes/roteiro.e2e.test.js`.
 
-Capturas de tela das dez telas, em 360 e 390 px: `node testes/capturas.js` (grava em `capturas/`, que não vai para o git).
+Capturas de tela das dez telas, no celular (360 e 390 px) e no computador (1280 × 720): `node testes/capturas.js` (grava em `capturas/`, que não vai para o git).
