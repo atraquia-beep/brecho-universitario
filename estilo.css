@@ -1,0 +1,152 @@
+@font-face { font-family: Newsreader; src: url(fontes/Newsreader-normal.woff2); font-weight: 400 600; }
+@font-face { font-family: Newsreader; font-style: italic; src: url(fontes/Newsreader-italic.woff2); font-weight: 400 600; }
+@font-face { font-family: Inter; src: url(fontes/Inter-normal.woff2); font-weight: 400 600; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+/* Papel por padrão; body.escuro é a luz do drop. */
+:root { --fundo: #FFFFFF; --tinta: #1F2322; --apoio: #6E7270; --realce: #F0E4D6; --traco: #9A9E9C; }
+/* --realce-escuro vem do app.js: a cor escolhida a 26% */
+body.escuro { --fundo: #1F2322; --tinta: #F4F1EA; --apoio: #A9ADAA; --realce: var(--realce-escuro, rgba(240, 228, 214, .26)); }
+
+body {
+  margin: 0 auto; max-width: 430px; min-height: 100vh; padding: 26px 24px 22px;
+  display: flex; flex-direction: column;
+  background: var(--fundo); color: var(--tinta);
+  font: 400 21px/1.36 Newsreader, serif; letter-spacing: -.01em;
+}
+:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+.topo { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+#marca { color: var(--tinta); display: block; }
+#marca svg { width: 36px; height: 28px; display: block; }
+#conta { font: 400 13px/1.45 Inter, sans-serif; letter-spacing: -.005em; color: var(--apoio); text-decoration: none; }
+#tela { flex: 1; display: flex; flex-direction: column; }
+
+p { margin: 0 0 16px; }
+.frase { margin: 0 0 16px; }
+.apoio { font: 400 13px/1.45 Inter, sans-serif; letter-spacing: -.005em; color: var(--apoio); }
+
+/* Ação: palavra sublinhada dentro da frase. */
+.palavra, .opcoes a, .opcoes button {
+  font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: var(--traco);
+}
+.principal {
+  font: inherit; letter-spacing: inherit; color: inherit; background: linear-gradient(transparent 62%, var(--realce) 62%);
+  border: 0; padding: 0 2px; cursor: pointer; text-decoration: none; font-weight: 600; align-self: flex-start; margin: 4px 0 18px;
+}
+.principal::after { content: " ›"; font-weight: 400; }
+.opcoes { display: flex; flex-wrap: wrap; gap: 2px 20px; margin: -6px 0 18px; font-size: 18px; line-height: 1.4; }
+.opcoes button { padding: 5px 0; }
+.opcoes [aria-pressed="true"], .opcoes [aria-current="true"] { font-weight: 600; background: linear-gradient(transparent 62%, var(--realce) 62%); }
+
+/* Campo: parece uma palavra sublinhada dentro da frase, sem caixa. */
+.campo {
+  font: inherit; letter-spacing: inherit; color: inherit; border: 0; border-radius: 0; padding: 0; max-width: 100%; min-width: 4ch;
+  vertical-align: baseline; line-height: 1;
+  /* o traço fica na mesma altura do sublinhado das palavras */
+  background: linear-gradient(var(--traco), var(--traco)) no-repeat 0 calc(100% - 1px) / 100% 1px;
+}
+.campo:focus-visible { outline: 0; background-image: linear-gradient(currentColor, currentColor); background-size: 100% 2px; }
+.campo::placeholder { color: var(--apoio); opacity: 1; }
+
+.codigo { font: 400 64px/1 Newsreader, serif; letter-spacing: .06em; margin: 4px 0 20px; }
+.contagem { font: 400 76px/1 Newsreader, serif; letter-spacing: -.02em; margin: 8px 0 22px; font-variant-numeric: tabular-nums; }
+
+/* Sobre foto: a única cor da tela. */
+.pilula { font: 500 11.5px Inter, sans-serif; color: #fff; background: rgba(31, 35, 34, .82); padding: 5px 10px; border-radius: 99px; letter-spacing: .02em; }
+.etiqueta { background: #fff; color: #1F2322; padding: 5px 11px 7px; font: 400 18px/1.2 Newsreader, serif; }
+
+/* Espera */
+.lab { text-transform: uppercase; letter-spacing: .09em; font-size: 11px; }
+.teaser { position: relative; height: 150px; margin: 6px 0 0; flex: none; }
+.teaser img { position: absolute; width: 37%; height: 132px; object-fit: cover; filter: blur(7px) saturate(.9); border-radius: 3px; opacity: .85; }
+.teaser img:nth-child(1) { left: 0; top: 8px; transform: rotate(-6deg); }
+.teaser img:nth-child(2) { left: 30%; top: 0; transform: rotate(3deg); }
+.teaser img:nth-child(3) { left: 60%; top: 10px; transform: rotate(-3deg); }
+.teaser span { position: absolute; left: 0; right: 0; top: 52px; text-align: center; font: 400 12.5px Inter, sans-serif; color: #F4F1EA; letter-spacing: .02em; }
+.final { margin-top: auto; }
+.principal.final { margin-bottom: 8px; }
+p.final { margin-bottom: 8px; }
+body.com-pedido { padding-bottom: 96px; }
+
+/* Campo do pedido: fixo no rodapé, na coluna do celular, uma linha, sem caixa. */
+#pedido {
+  position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 430px; padding: 8px 24px 22px; display: flex;
+  background: linear-gradient(currentColor, currentColor) no-repeat 24px calc(100% - 22px) / calc(100% - 48px) 1px, var(--fundo);
+  color: var(--tinta);
+}
+#pedido input { flex: 1; min-width: 0; font: inherit; font-size: 21px; color: inherit; background: none; border: 0; border-radius: 0; padding: 6px 0; }
+#pedido input::placeholder { color: inherit; opacity: .75; }
+#pedido:focus-within { background-size: calc(100% - 48px) 2px, auto; }
+#pedido input:focus-visible { outline: 0; }
+#pedido button { font: inherit; font-size: 18px; color: inherit; background: none; border: 0; cursor: pointer; padding: 6px 0 6px 12px; }
+
+/* Drop no ar: a foto ocupa a tela, a folha escura fica embaixo; o topo segue clicável sobre a foto. */
+body.ao-vivo .topo { position: relative; z-index: 2; }
+body.ao-vivo #marca, body.ao-vivo #conta { color: #F4F1EA; }
+#drop {
+  position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 1; max-width: 430px; margin: 0 auto;
+  display: flex; flex-direction: column; overflow: hidden; background: #1F2322;
+}
+.foto { position: relative; flex: 1; min-height: 0; background: #2A2E2D; }
+/* sombra suave no topo: o cabide e a conta se leem sobre foto clara */
+.foto::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 140px; background: linear-gradient(rgba(31, 35, 34, .62), rgba(31, 35, 34, 0)); pointer-events: none; }
+.cartao {
+  position: absolute; top: 0; bottom: 0; left: 0; right: 0; touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  cursor: grab; transition: transform .25s ease-out;
+}
+.cartao.arrastando { transition: none; cursor: grabbing; }
+#peca { display: block; width: 100%; height: 100%; object-fit: cover; background: #2A2E2D; -webkit-user-drag: none; -webkit-touch-callout: none; }
+.carimbo { position: absolute; top: 128px; font: italic 500 30px/1 Newsreader, serif; color: #fff; border: 2px solid #fff; padding: 4px 12px 7px; text-shadow: 0 0 12px rgba(0, 0, 0, .35); }
+.carimbo.direita { left: 22px; transform: rotate(-10deg); }
+.carimbo.esquerda { right: 22px; transform: rotate(10deg); }
+.pilulas { position: absolute; top: 72px; left: 20px; right: 20px; z-index: 1; display: flex; justify-content: space-between; pointer-events: none; }
+#resta::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #E5553B; margin-right: 6px; }
+.folha { position: relative; padding: 20px 24px 22px; background: #1F2322; color: #F4F1EA; }
+.folha .frase { margin-bottom: 6px; font-size: 20px; }
+.folha .apoio { margin: 0; }
+.acoes { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; }
+.acoes .palavra { font-size: 20px; }
+.acoes .principal { font-size: 27px; margin: 0; }
+.barra { display: flex; gap: 5px; margin: 14px 0 8px; }
+.barra i { flex: 1; height: 3px; background: #4A4F4D; }
+.barra i.f { background: #F4F1EA; }
+#aviso { position: absolute; left: 16px; right: 16px; bottom: 100%; margin-bottom: 14px; background: #F4F1EA; color: #1F2322; padding: 8px 12px 10px; font-size: 17px; line-height: 1.3; }
+
+/* Vender pela câmera: o visor ocupa o alto da tela, por baixo do topo (26 + 28 + 20 px). */
+body.vendendo .topo { position: relative; z-index: 2; align-items: center; }
+.visor { flex: none; height: 50vh; min-height: 280px; margin: -74px -24px 22px; overflow: hidden; }
+#visor { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; object-fit: cover; object-position: 50% 30%; }
+.canto { position: absolute; z-index: 1; width: 30px; height: 30px; border: 2px solid #fff; }
+.canto.sup { top: 84px; border-bottom: 0; }
+.canto.inf { bottom: 24px; border-top: 0; }
+.canto.esq { left: 30px; border-right: 0; }
+.canto.dir { right: 30px; border-left: 0; }
+/* visor e "Olhando…": a imagem cobre a tela inteira (vh antes como reserva, R7); a margem de baixo anula o padding do body */
+.visor.cheio { height: 100vh; height: 100dvh; margin-bottom: -22px; }
+.cheio .canto.sup { top: 13%; }
+.cheio .canto.inf { bottom: 36%; }
+.rodape { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 56px 24px 22px; color: #F4F1EA; background: linear-gradient(rgba(31, 35, 34, 0), rgba(31, 35, 34, .85) 45%); }
+.rodape .apoio { color: #F4F1EA; margin: 0 0 6px; }
+.rodape .frase { margin: 0 0 6px; }
+.disparo { position: relative; display: block; width: 66px; height: 66px; margin: 0 auto 16px; padding: 0; border: 3px solid #fff; border-radius: 50%; background: none; color: #fff; cursor: pointer; }
+.disparo::after { content: ""; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px; background: #fff; border-radius: 50%; }
+.etiquetas { position: absolute; z-index: 1; left: 44px; right: 24px; bottom: 34px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.etiqueta.grande { font-size: 26px; font-weight: 500; padding: 4px 14px 8px; }
+
+/* Movimento: entra em sequência curta quando a vista muda; a foto que sai gira para o lado escolhido. */
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
+#tela.entra .frase, #tela.entra .contagem, #tela.entra .codigo { animation: entrar 240ms ease-out both; animation-delay: calc(var(--i, 0) * 60ms); }
+.camada-fantasma { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3; overflow: hidden; pointer-events: none; }
+.fantasma { position: absolute; object-fit: cover; animation: 180ms ease-in forwards; }
+.fantasma.direita { animation-name: sair-direita; }
+.fantasma.esquerda { animation-name: sair-esquerda; }
+@keyframes sair-direita { to { transform: translateX(110%) rotate(14deg); opacity: 0; } }
+@keyframes sair-esquerda { to { transform: translateX(-110%) rotate(-14deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .cartao { transition: none; }
+  #tela.entra .frase, #tela.entra .contagem, #tela.entra .codigo { animation: none; }
+}

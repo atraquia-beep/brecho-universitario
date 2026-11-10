@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brechó</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<filter id="tinta"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="4"/></filter>
+<symbol id="cabide" viewBox="0 0 120 92"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" filter="url(#tinta)">
+<path d="M60 32 C59 23 71 24 71 14 C71 5 55 3 52 14" stroke-width="3.6"/>
+<path d="M60 32 L13 63 C7 68 10 76 18 76 L102 76 C110 76 113 68 107 63 L60 32" stroke-width="4"/>
+<path d="M58 33 L16 64" stroke-width="1.6"/></g></symbol></defs></svg>
+<header class="topo"><a id="marca" href="#/" aria-label="Tela principal"><svg viewBox="0 0 120 92" aria-hidden="true"><use href="#cabide"/></svg></a><a id="conta" href="#/voce"></a></header>
+<main id="tela" aria-live="polite"></main>
+<form id="pedido" hidden><input id="pedido-campo" aria-label="Diga o que procura" placeholder="Diga o que procura" autocomplete="off"><button aria-label="Enviar pedido">↑</button></form>
+<script src="dados.js"></script><script src="logica.js"></script><script src="app.js"></script>
+</body>
+</html>

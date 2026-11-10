@@ -1,0 +1,17 @@
+# Créditos das fotos
+
+- jaqueta-jeans-ana.jpg: https://images.unsplash.com/photo-1543076447-215ad9ba6923 (licença Unsplash)
+- jaqueta-couro-a.jpg: https://images.unsplash.com/photo-1551028719-00167b16eac5 (licença Unsplash)
+- blazer-preto.jpg: https://images.unsplash.com/photo-1585412459272-762fb93357c3 (licença Unsplash)
+- blazer-bege.jpg: https://images.unsplash.com/photo-1761499101317-e32c4ed50b2f (licença Unsplash)
+- camiseta-azul.jpg: https://images.unsplash.com/photo-1564584217132-2271feaeb3c5 (licença Unsplash)
+- camiseta-marinho.jpg: https://images.unsplash.com/photo-1666358070734-b9d6590278c9 (licença Unsplash)
+- moletom-branco.jpg: https://images.unsplash.com/photo-1620799140188-3b2a02fd9a77 (licença Unsplash)
+- moletom-azul.jpg: https://images.unsplash.com/photo-1739384994765-d44f7af12029 (licença Unsplash)
+- moletom-preto.jpg: https://images.unsplash.com/photo-1680292783974-a9a336c10366 (licença Unsplash)
+- camisa-social.jpg: https://images.unsplash.com/photo-1603252109303-2751441dd157 (licença Unsplash)
+- camisa-xadrez.jpg: https://images.unsplash.com/photo-1630355734650-55fe91e1e5c7 (licença Unsplash)
+- calca-jeans-azul.jpg: https://images.unsplash.com/photo-1714143136372-ddaf8b606da7 (licença Unsplash)
+- calca-jeans-escura.jpg: https://images.unsplash.com/photo-1714143164072-7646ef5cb24d (licença Unsplash)
+- vestido-renda.jpg: https://images.unsplash.com/photo-1534875756527-5e8e4392005f (licença Unsplash)
+- exemplo-venda.jpg: https://images.unsplash.com/photo-1611312449408-fcece27cdbb7 (licença Unsplash)
