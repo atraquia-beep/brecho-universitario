@@ -810,17 +810,17 @@ function telaVender() {
   const precos = [-10, -5, 0, 5, 10].map(d => faixa.sugerido + d).filter(p => p >= 5);
   const valor = Logica.valorVenda(a.preco);
   const receber = r => r === 'pix' ? din(valor.pix) + ' no Pix' : din(valor.creditos) + ' em créditos';
-  const trocar = mudanca => { Object.assign(a, mudanca); desenhar(); };
+  const ajustar = mudanca => { Object.assign(a, mudanca); desenhar(); };
   // tipo e estado refazem a faixa e voltam o preço ao sugerido
-  const refazer = mudanca => { Object.assign(a, mudanca); trocar({ preco: Logica.sugerirPreco(a.tipo, a.estado).sugerido }); };
+  const refazer = mudanca => { Object.assign(a, mudanca); ajustar({ preco: Logica.sugerirPreco(a.tipo, a.estado).sugerido }); };
   return [lado('palco', visor), lado('painel',
     frase('Parece ' + DADOS.TIPOS[a.tipo].artigo + ' ', palavra(a.tipo, 'Tipo', Object.keys(DADOS.TIPOS), t => refazer({ tipo: t })),
-      ', tamanho ', palavra(a.tamanho, 'Tamanho', DADOS.TAMANHOS, t => trocar({ tamanho: t })),
+      ', tamanho ', palavra(a.tamanho, 'Tamanho', DADOS.TAMANHOS, t => ajustar({ tamanho: t })),
       ', ', palavra(a.estado, 'Estado', DADOS.ESTADOS, e => refazer({ estado: e })),
       '. No campus, peças assim saem por ' + din(faixa.min) + ' a ' + din(faixa.max) + '. Eu anunciaria por ',
-      palavra(din(a.preco), 'Preço', precos.map(din), p => trocar({ preco: precos[precos.map(din).indexOf(p)] })), '.'),
+      palavra(din(a.preco), 'Preço', precos.map(din), p => ajustar({ preco: precos[precos.map(din).indexOf(p)] })), '.'),
     frase('Vendendo, prefiro ', palavra(receber(a.receber), 'Receber', [receber('creditos'), receber('pix')],
-      r => trocar({ receber: r === receber('pix') ? 'pix' : 'creditos' })), '.'),
+      r => ajustar({ receber: r === receber('pix') ? 'pix' : 'creditos' })), '.'),
     principal('Anunciar no drop', anunciarVenda))];
 }
 
@@ -963,6 +963,7 @@ function desenhar() {
   // a peça em tela cheia (drop ou arara) põe o topo claro sobre a foto
   document.body.classList.toggle('ao-vivo', nos.some(n => n.id === 'drop'));
   document.body.classList.toggle('vendendo', rota === rotas.vender);
+  alca.hidden = rota !== rotas.sua && rota !== rotas.vender; // as folhas fecham pela alça
   document.body.classList.toggle('entrada', !estado.perfil);
   // o passo dentro da rota também é vista nova; trocar uma palavra no mesmo passo, não
   const reserva = rota === rotas.sua && estado.reservas.find(x => x.pecaId === location.hash.split('/')[2]);
@@ -1004,15 +1005,58 @@ function soltarFoto() {
 }
 
 function trocar(passagem, fazer) {
-  if (!passagem || !passagemAnima()) { fazer(); soltarFoto(); return; }
-  if (transicao) transicao.skipTransition(); // um toque no meio: a passagem de antes acaba na hora e a nova parte dali
   const html = document.documentElement;
+  // A folha arrastada entra na foto da tela antiga como está, e a 'desce' parte do --arraste dela (estilo.css); a página só volta ao lugar
+  // na tela nova. Tirar o deslocamento antes da foto mostraria um quadro com a folha no alto. Nenhuma outra passagem herda o --arraste.
+  html.style.setProperty('--arraste', document.body.matches('.arrastando-folha, .folha-volta') ? getComputedStyle(html).getPropertyValue('--arraste') : '0px');
+  const feito = () => { soltarFolha(); fazer(); };
+  if (!passagem || !passagemAnima()) { feito(); soltarFoto(); html.style.removeProperty('--arraste'); return; }
+  if (transicao) transicao.skipTransition(); // um toque no meio: a passagem de antes acaba na hora e a nova parte dali
   html.dataset.passagem = passagem;
-  const t = transicao = document.startViewTransition(fazer);
+  const t = transicao = document.startViewTransition(feito);
   t.ready.catch(() => {}); // a passagem pulada rejeita o ready; não é erro
-  // a que foi pulada não apaga a marca da que começou depois
-  t.finished.finally(() => { soltarFoto(); if (transicao === t) { transicao = null; delete html.dataset.passagem; } });
+  // a que foi pulada não apaga a marca nem o --arraste da que começou depois
+  t.finished.finally(() => { soltarFoto(); if (transicao === t) { transicao = null; delete html.dataset.passagem; html.style.removeProperty('--arraste'); } });
 }
+
+// ---------- Folha que fecha arrastando ----------
+// A alça no alto de É seu e de Vender fecha a folha, tocada ou arrastada para baixo; só ela pega o arraste (o visor e o resto ficam livres).
+// O dedo leva a página inteira pelo <html>, com o topo e o que é fixo, e o que ela descobre fica preto (--arraste; estilo.css).
+// Largada além de 30% da altura, fecha (trocar a leva dali); antes disso, volta com a mola da pilha.
+const alca = document.querySelector('.alca');
+let dedo = null, arrastou = false; // a altura em que o dedo pegou a alça; se ele já andou: aí o clique que vem junto não conta
+// fechar volta a quem abriu a folha: a peça da arara à arara; o resto ao início
+const fecharFolha = () => { location.hash = rotaAtual() === 'sua' && daArara(location.hash.split('/')[2]) ? '#/arara' : '#/'; };
+function soltarFolha() { dedo = null; document.body.classList.remove('arrastando-folha', 'folha-volta'); }
+alca.addEventListener('click', e => { if (!e.detail || !arrastou) fecharFolha(); }); // pelo teclado (detail 0), sempre
+alca.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  // pega a folha onde ela estiver, até no meio da volta
+  const html = document.documentElement, y = parseFloat(getComputedStyle(html).getPropertyValue('--arraste')) || 0;
+  html.style.setProperty('--arraste', y + 'px');
+  dedo = e.clientY - y; arrastou = false;
+  alca.setPointerCapture(e.pointerId);
+  document.body.classList.remove('folha-volta');
+  document.body.classList.add('arrastando-folha');
+});
+alca.addEventListener('pointermove', e => {
+  if (dedo === null) return;
+  const dy = e.clientY - dedo;
+  if (Math.abs(dy) > 10) arrastou = true;
+  document.documentElement.style.setProperty('--arraste', (dy < 0 ? dy / 4 : dy) + 'px'); // para cima, resiste
+});
+const largar = vale => () => {
+  if (dedo === null) return;
+  dedo = null;
+  const html = document.documentElement;
+  if (vale && parseFloat(html.style.getPropertyValue('--arraste')) > innerHeight * .3) { fecharFolha(); return; }
+  // volta com a mola; para quem pede menos movimento não há transição, e a folha fica no lugar na hora
+  document.body.classList.replace('arrastando-folha', 'folha-volta');
+  html.style.removeProperty('--arraste'); // de volta ao 0px de origem (@property, estilo.css)
+  Promise.all(html.getAnimations().map(a => a.finished)).then(soltarFolha, () => {});
+};
+alca.addEventListener('pointerup', largar(true));
+alca.addEventListener('pointercancel', largar(false));
 
 // ---------- Tique ----------
 function trocarTexto(id, texto) {

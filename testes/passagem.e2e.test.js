@@ -1,4 +1,4 @@
-const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar } = require('./apoio.js');
+const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar, salvo, aoVivo } = require('./apoio.js');
 // O sentido da passagem que o toque abriu (<html data-passagem>). O hashchange chega numa tarefa à parte, que pode vir depois de uma
 // leitura imediata: espera a marca aparecer (até 2 s) e a lê na hora, sem esperar a tela nova. Sem passagem, ''.
 const sentido = page => page.waitForFunction(() => document.documentElement.dataset.passagem, null, { timeout: 2000 }).then(h => h.jsonValue(), () => '');
@@ -353,4 +353,151 @@ test('a peça nova continua de onde a de baixo estava: inteira depois do arraste
   await page.getByRole('button', { name: 'passo' }).click();
   assert.deepEqual(await comeco(), [.94, .6]); // sem arraste, sobe da pilha
   await fechar();
+});
+
+// ---------- Folhas que fecham arrastando ----------
+// da tela de início até É seu de uma peça da arara, com as passagens já terminadas (sem passagem, na hora)
+async function emEseu(page) {
+  await verPecas(page).click(); await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  await page.getByRole('button', { name: 'É minha' }).click(); await page.locator('.codigo').waitFor(); await fimDaPassagem(page);
+}
+// o dedo (o mouse) pega a alça e anda dy px na vertical, sem soltar
+async function puxarAlca(page, dy) {
+  const b = await page.locator('.alca').boundingBox(), x = b.x + b.width / 2, y = b.y + b.height / 2;
+  await page.mouse.move(x, y); await page.mouse.down();
+  await page.mouse.move(x, y + dy / 2, { steps: 4 }); await page.mouse.move(x, y + dy, { steps: 4 });
+}
+const alto = page => page.evaluate(() => innerHeight);
+const topos = page => page.evaluate(() => ['.topo', '#tela'].map(s => document.querySelector(s).getBoundingClientRect().top));
+// o deslocamento da página, as marcas do arraste e o --arraste do <html>: tudo vazio com a folha no lugar
+const folhaNoLugar = page => page.evaluate(() => [getComputedStyle(document.documentElement).transform, document.documentElement.style.getPropertyValue('--arraste'),
+  ['arrastando-folha', 'folha-volta'].filter(c => document.body.classList.contains(c)).join()]);
+// a foto da tela antiga no começo da 'desce' (achar, pausar no zero, ler e soltar numa tacada só): o recorte de cima e o deslocamento
+const inicioDaDesce = page => page.waitForFunction(() => {
+  const a = document.getAnimations().find(a => a.effect && a.effect.pseudoElement === '::view-transition-old(root)');
+  if (!a) return false;
+  a.pause(); a.currentTime = 0;
+  const cs = getComputedStyle(document.documentElement, '::view-transition-old(root)'), r = [cs.clipPath, new DOMMatrix(cs.transform).m42];
+  a.play();
+  return r;
+}, null, { timeout: 2000 }).then(h => h.jsonValue());
+const recorteDeCima = clip => { const m = /^inset\(([-\d.]+)px/.exec(clip); assert.ok(m, clip); return Number(m[1]); };
+
+test('arrastar a folha para baixo fecha: topo e tela descem juntos com o dedo e a passagem parte dali', async () => {
+  const { page, fechar } = await comMovimento();
+  await emEseu(page);
+  const h = await alto(page), antes = await topos(page);
+  await puxarAlca(page, h * .6);
+  // a folha inteira acompanha o dedo (o topo também, senão ele pularia na hora de soltar) e o que ela descobre fica preto
+  const durante = await topos(page);
+  durante.forEach((t, i) => assert.ok(Math.abs(t - antes[i] - h * .6) <= 1, JSON.stringify({ antes, durante })));
+  assert.deepEqual(await page.evaluate(() => [document.body.classList.contains('arrastando-folha'), getComputedStyle(document.documentElement).backgroundColor]), [true, 'rgb(0, 0, 0)']);
+  await page.mouse.up();
+  assert.equal(await sentido(page), 'desce');
+  // a tela antiga sai de onde o dedo a largou: a foto dela começa sem pular para o alto, já sem a faixa que a folha descobriu
+  const [recorte, desloca] = await inicioDaDesce(page);
+  assert.ok(Math.abs(recorteDeCima(recorte) - h * .6) <= 1 && desloca === 0, recorte + ' ' + desloca);
+  await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  assert.equal(await page.evaluate(() => location.hash), '#/arara');
+  assert.deepEqual(await folhaNoLugar(page), ['none', '', '']); // o fim da passagem leva o --arraste junto
+  await fechar();
+});
+
+test('arrastar pouco devolve a folha com a mola e não muda nada; o clique que sai do arraste não fecha', async () => {
+  const { page, fechar } = await comMovimento();
+  await emEseu(page);
+  const hash = await page.evaluate(() => location.hash), reservas = (await salvo(page)).reservas, h = await alto(page), antes = await topos(page);
+  // para cima a folha resiste: anda um quarto do dedo
+  await puxarAlca(page, -40);
+  assert.ok(Math.abs((await topos(page))[0] - antes[0] + 10) <= 1);
+  await page.mouse.up();
+  await puxarAlca(page, h * .15); await page.mouse.up();
+  // o Chromium manda um clique na alça depois do arraste capturado: ele não fecha a folha
+  assert.equal(await page.evaluate(() => location.hash), hash);
+  // volta com a mesma mola da pilha (passa um pouco do ponto) e, no fim, a página fica sem deslocamento
+  assert.match(await page.evaluate(() => getComputedStyle(document.documentElement).transitionTimingFunction), /^cubic-bezier\(0\.34, 1\.56, 0\.64, 1\)$/);
+  await page.waitForFunction(() => getComputedStyle(document.documentElement).transform === 'none', null, { timeout: 2000 });
+  assert.deepEqual(await folhaNoLugar(page), ['none', '', '']);
+  assert.equal(await page.locator('#tela').evaluate(e => getComputedStyle(e).transform), 'none');
+  assert.equal(await sentido(page), '');
+  assert.equal(await page.evaluate(() => location.hash), hash);
+  assert.deepEqual((await salvo(page)).reservas, reservas);
+  await fechar();
+});
+
+test('alça tocada fecha como o Voltar: É seu da arara volta à arara, Vender volta ao início', async () => {
+  const { page, fechar } = await comMovimento();
+  assert.equal(await page.locator('.alca').isVisible(), false); // só as folhas têm alça
+  await emEseu(page);
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  assert.equal(await sentido(page), 'desce');
+  await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  assert.equal(await page.evaluate(() => location.hash), '#/arara');
+  assert.equal(await page.locator('.alca').isVisible(), false);
+  await page.locator('#marca').click(); await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor(); await fimDaPassagem(page);
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  assert.equal(await sentido(page), 'desce');
+  await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
+  assert.equal(await page.evaluate(() => location.hash), '#/');
+  await fechar();
+});
+
+test('depois de fechar arrastando, a próxima desce parte do zero', async () => {
+  const { page, fechar } = await comMovimento();
+  await emEseu(page);
+  await puxarAlca(page, await alto(page) * .6); await page.mouse.up();
+  await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  await page.getByRole('button', { name: 'É minha' }).click(); await page.locator('.codigo').waitFor(); await fimDaPassagem(page);
+  await page.getByRole('link', { name: 'continuar na arara' }).click();
+  assert.equal(await sentido(page), 'desce');
+  const [recorte, desloca] = await inicioDaDesce(page);
+  assert.ok(recorteDeCima(recorte) === 0 && desloca === 0, recorte + ' ' + desloca);
+  await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  await fechar();
+});
+
+test('movimento reduzido: a alça fecha no toque e no arraste, sem passagem; arrastada pouco, volta na hora', async () => {
+  const { page, passar, fechar } = await abrir(); await entrar(page);
+  await emEseu(page);
+  const h = await alto(page), antes = await topos(page);
+  await puxarAlca(page, h * .15);
+  // o arraste é o gesto, não animação: a folha acompanha o dedo também aqui
+  (await topos(page)).forEach((t, i) => assert.ok(Math.abs(t - antes[i] - h * .15) <= 1, JSON.stringify(antes)));
+  await page.mouse.up();
+  assert.deepEqual(await folhaNoLugar(page), ['none', '', '']); // sem a mola: já no lugar
+  await puxarAlca(page, h * .6); await page.mouse.up();
+  await page.locator('#drop').waitFor();
+  assert.deepEqual([await page.evaluate(() => location.hash), await sentido(page), await folhaNoLugar(page)], ['#/arara', '', ['none', '', '']]);
+  // peça do drop: a alça volta ao drop, como o "Voltar ao drop"
+  await page.locator('#marca').click(); await aoVivo(page, passar);
+  await page.getByRole('button', { name: 'É minha' }).click(); await page.locator('.codigo').waitFor();
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  await page.locator('#resta').waitFor();
+  assert.equal(await page.evaluate(() => location.hash), '#/');
+  await fechar();
+});
+
+test('a alça fica no alto, no meio, com toque folgado e sem encostar no cabide nem no nome (celular e computador)', async () => {
+  for (const [largura, altura] of [[390, 844], [1280, 720]]) {
+    const { page, fechar } = await abrir({ largura, altura }); await entrar(page);
+    const confere = async onde => {
+      const r = await page.evaluate(() => {
+        const a = document.querySelector('.alca').getBoundingClientRect();
+        const encosta = ['#marca', '#conta', '#cronometro'].filter(s => {
+          const e = document.querySelector(s), b = e && e.getBoundingClientRect();
+          return b && b.width && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+        });
+        // touch-action none: no celular o dedo na alça arrasta a folha em vez de rolar a página
+        return { encosta, meio: Math.round(a.left + a.width / 2 - innerWidth / 2), topo: a.top, largura: a.width, altura: a.height, toque: getComputedStyle(document.querySelector('.alca')).touchAction };
+      });
+      assert.ok(!r.encosta.length && Math.abs(r.meio) <= 1 && r.topo === 0 && r.largura >= 88 && r.altura >= 44 && r.toque === 'none', largura + ' ' + onde + ' ' + JSON.stringify(r));
+    };
+    await emEseu(page);
+    await confere('é seu');
+    await page.evaluate(() => { location.hash = '#/vender'; }); // em É seu a barra está escondida
+    await page.getByRole('button', { name: 'Fotografar' }).waitFor();
+    await confere('vender');
+    await fechar();
+  }
 });
