@@ -933,7 +933,8 @@ function desenhar() {
     : reserva ? comoFoi + '|' + reserva.retirada : '');
   // o drop abriu na frente da pessoa: a cortina na cor dela marca a virada
   if (rota === rotas[''] && telaAntes === 'espera' && ultimaTela === 'no-ar' && !document.getElementById('abertura')) cortina('ao-vivo', 'AO VIVO');
-  tela.classList.toggle('entra', vista !== ultimaVista);
+  // numa passagem a tela inteira já se move: sem a entrada escalonada, nem durante nem quando a marca sai (a classe ligaria a entrada nessa hora)
+  tela.classList.toggle('entra', vista !== ultimaVista && !document.documentElement.dataset.passagem);
   ultimaVista = vista;
   tela.textContent = '';
   let i = 0; // a ordem de entrada conta os nós de dentro de cada lado
@@ -946,6 +947,21 @@ function desenhar() {
     const alvo = Array.prototype.find.call(tela.querySelectorAll('button.palavra'), b => (b.getAttribute('aria-label') || '').indexOf(rotuloParaFocar + ': ') === 0);
     if (alvo) alvo.focus();
   }
+}
+
+// Troca de tela com movimento: o sentido (Logica.passagem) fica em <html data-passagem> enquanto a View Transition roda, e o estilo.css anima.
+// Sem sentido, sem a API ou para quem pede menos movimento, troca na hora, como sempre.
+let transicao = null; // a View Transition em curso
+
+function trocar(passagem, fazer) {
+  if (!passagem || !document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { fazer(); return; }
+  if (transicao) transicao.skipTransition(); // um toque no meio: a passagem de antes acaba na hora e a nova parte dali
+  const html = document.documentElement;
+  html.dataset.passagem = passagem;
+  const t = transicao = document.startViewTransition(fazer);
+  t.ready.catch(() => {}); // a passagem pulada rejeita o ready; não é erro
+  // a que foi pulada não apaga a marca da que começou depois
+  t.finished.finally(() => { if (transicao === t) { transicao = null; delete html.dataset.passagem; } });
 }
 
 // ---------- Tique ----------
@@ -990,11 +1006,15 @@ function tique() {
 
 // ---------- Partida ----------
 window.addEventListener('hashchange', e => {
-  scrollTo(0, 0); // tela nova abre no topo; redesenhar a mesma tela não passa por aqui
-  comoFoi = null; apagando = false;
-  // a arara lembra as peças passadas só no vai e volta com "é sua"
-  if (rotaAtual() === 'arara' && (e.oldURL.split('#')[1] || '').replace(/^\/?/, '').split('/')[0] !== 'sua') araraPassadas = [];
-  desenhar();
+  const de = (e.oldURL.split('#')[1] || '').replace(/^\/?/, '').split('/')[0], para = rotaAtual();
+  trocar(Logica.passagem(de, para), () => {
+    // tela nova abre no topo, e a antiga já saiu na foto da passagem de onde a pessoa estava; redesenhar a mesma tela não passa por aqui
+    scrollTo(0, 0);
+    comoFoi = null; apagando = false;
+    // a arara lembra as peças passadas só no vai e volta com "é sua"
+    if (para === 'arara' && de !== 'sua') araraPassadas = [];
+    desenhar();
+  });
 });
 document.addEventListener('keydown', e => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;

@@ -269,6 +269,45 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   #tela.entra .frase, #tela.entra .ficha, #tela.entra .fecho, #tela.entra .contagem, #tela.entra .codigo, #tela.entra .titulo .letra, #tela.entra .regua { animation: none; }
 }
 
+/* Passagens entre telas: o app.js abre uma View Transition só para quem aceita movimento e marca o sentido em html[data-passagem].
+   A, porta lateral, para trocar de lugar: na ida a tela nova entra pela direita e a antiga recua e escurece; na volta, o contrário.
+   C, folha, para o que abre por cima e fecha: sobe de baixo com os cantos de cima redondos e a tela de baixo encolhe e escurece; desce mais rápido.
+   Entrar segue a curva do Velvet; sair acelera. O topo vai junto com a tela: parado, o cabide piscava entre uma tela escura e uma clara.
+   A barra de baixo fica parada; quando só uma das telas tem barra, ela desce ou sobe. (Durante a passagem a entrada escalonada não liga: app.js.) */
+@media (prefers-reduced-motion: no-preference) {
+  #abas { view-transition-name: abas; }
+  html[data-passagem] body { transition: none; } /* a tela nova já chega com a cor dela */
+  ::view-transition { background: #000; } /* em volta da tela que encolhe */
+  ::view-transition-group(*) { animation-duration: .42s; animation-timing-function: var(--expo); }
+  html[data-passagem=volta]::view-transition-group(*) { animation-duration: .38s; animation-timing-function: cubic-bezier(.7, 0, .84, 0); }
+  html[data-passagem=sobe]::view-transition-group(*) { animation-duration: .5s; }
+  html[data-passagem=desce]::view-transition-group(*) { animation-duration: .36s; animation-timing-function: cubic-bezier(.7, 0, .84, 0); }
+  ::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; }
+  html[data-passagem=ida]::view-transition-old(root) { animation-name: recua; }
+  html[data-passagem=ida]::view-transition-new(root) { animation-name: entra-da-direita; }
+  html[data-passagem=volta]::view-transition-old(root) { z-index: 2; animation-name: sai-pela-direita; }
+  html[data-passagem=volta]::view-transition-new(root) { animation-name: volta-da-esquerda; }
+  html[data-passagem=sobe]::view-transition-old(root) { animation-name: encolhe; }
+  html[data-passagem=sobe]::view-transition-new(root) { animation-name: folha-sobe; }
+  html[data-passagem=desce]::view-transition-old(root) { z-index: 2; animation-name: folha-desce; }
+  html[data-passagem=desce]::view-transition-new(root) { animation-name: desencolhe; }
+  ::view-transition-old(abas):only-child { animation-name: barra-desce; }
+  ::view-transition-new(abas):only-child { animation-name: barra-sobe; }
+  /* fora de uma passagem (a entrada, o fim do drop) a barra que volta também sobe; dentro dela, quem a move é a passagem */
+  html:not([data-passagem]) body:not(.sem-abas) #abas { transition: transform .4s var(--expo); }
+  @starting-style { body:not(.sem-abas) #abas { transform: translateY(100%); } }
+}
+@keyframes recua { to { transform: translateX(-28%); filter: brightness(.6); } }
+@keyframes volta-da-esquerda { from { transform: translateX(-28%); filter: brightness(.6); } }
+@keyframes entra-da-direita { from { transform: translateX(100%); } }
+@keyframes sai-pela-direita { to { transform: translateX(100%); } }
+@keyframes encolhe { to { transform: scale(.92); filter: brightness(.55); border-radius: 18px; } }
+@keyframes desencolhe { from { transform: scale(.92); filter: brightness(.55); border-radius: 18px; } }
+@keyframes folha-sobe { from { transform: translateY(100%); border-radius: 22px 22px 0 0; } }
+@keyframes folha-desce { to { transform: translateY(100%); border-radius: 22px 22px 0 0; } }
+@keyframes barra-sobe { from { transform: translateY(100%); } }
+@keyframes barra-desce { to { transform: translateY(100%); } }
+
 /* ---------- Tela larga (computador) ----------
    O mesmo app, em dois lados: à esquerda o palco, com os números gigantes; à direita o painel; o pé fica embaixo do palco.
    No celular os lados não existem (display: contents) e os nós seguem em fila, na ordem de sempre. */
