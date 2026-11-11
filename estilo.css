@@ -306,15 +306,25 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   html[data-passagem=volta]::view-transition-group(*) { animation-duration: .38s; }
   html[data-passagem=sobe]::view-transition-group(*) { animation-duration: .5s; }
   html[data-passagem=desce]::view-transition-group(*) { animation-duration: .36s; }
-  ::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; }
-  html[data-passagem=ida]::view-transition-old(root) { animation-name: recua; }
-  html[data-passagem=ida]::view-transition-new(root) { animation-name: entra-da-direita; }
-  html[data-passagem=volta]::view-transition-old(root) { z-index: 2; animation-name: sai-pela-direita; }
-  html[data-passagem=volta]::view-transition-new(root) { animation-name: volta-da-esquerda; }
+  ::view-transition-old(root), ::view-transition-new(root), ::view-transition-old(painel), ::view-transition-new(painel) { mix-blend-mode: normal; }
+  html[data-passagem=ida]::view-transition-old(root), html[data-passagem=ida]::view-transition-old(painel) { animation-name: recua; }
+  html[data-passagem=ida]::view-transition-new(root), html[data-passagem=ida]::view-transition-new(painel) { animation-name: entra-da-direita; }
+  html[data-passagem=volta]::view-transition-old(root), html[data-passagem=volta]::view-transition-old(painel) { z-index: 2; animation-name: sai-pela-direita; }
+  html[data-passagem=volta]::view-transition-new(root), html[data-passagem=volta]::view-transition-new(painel) { animation-name: volta-da-esquerda; }
   html[data-passagem=sobe]::view-transition-old(root) { animation-name: encolhe; }
   html[data-passagem=sobe]::view-transition-new(root) { animation-name: folha-sobe; }
   html[data-passagem=desce]::view-transition-old(root) { z-index: 2; animation-name: folha-desce; }
   html[data-passagem=desce]::view-transition-new(root) { animation-name: desencolhe; }
+  /* Entre dois passos da entrada (html[data-passo], app.js) só o passo desliza: o cabide, a marca e o pé saem da foto da tela com nome
+     próprio e ficam parados (se a rolagem muda, deslizam até o lugar novo). No celular os lados não têm caixa (display: contents): o palco
+     e o pé ganham uma só durante a passagem, no mesmo lugar, e o passo vai com a tela, como antes. No computador o painel desliza sozinho,
+     na mesma porta, recortado onde começa o creme dele: o que sai não passa por baixo da marca. */
+  html[data-passo] .palco, html[data-passo] .pe { display: flex; flex-direction: column; }
+  html[data-passo] .topo { view-transition-name: topo; }
+  html[data-passo] .palco { view-transition-name: palco; }
+  html[data-passo] .pe { view-transition-name: pe; margin-top: auto; } /* em caixa, o pé segue embaixo (na fila, era a margem do .fecho) */
+  @media (min-width: 900px) { html[data-passo] .painel { view-transition-name: painel; } }
+  ::view-transition-image-pair(painel) { clip-path: inset(-100vmax -100vmax -100vmax -28px); }
   /* com a barra nos dois lados só o grupo se move; sem o fundido a palavra não borra e o realce não aparece duas vezes.
      (:not(:only-child) não vale em pseudo-elemento: o padrão é sem fundido e o :only-child devolve a animação de entrar/sair) */
   ::view-transition-old(abas) { opacity: 0; animation-name: none; }

@@ -1,4 +1,4 @@
-const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar, salvo, aoVivo } = require('./apoio.js');
+const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, ateOPerfil, entrar, salvo, aoVivo } = require('./apoio.js');
 // O sentido da passagem que o toque abriu (<html data-passagem>). O hashchange chega numa tarefa à parte, que pode vir depois de uma
 // leitura imediata: espera a marca aparecer (até 2 s) e a lê na hora, sem esperar a tela nova. Sem passagem, ''.
 const sentido = page => page.waitForFunction(() => document.documentElement.dataset.passagem, null, { timeout: 2000 }).then(h => h.jsonValue(), () => '');
@@ -217,6 +217,74 @@ test('entrada desliza para a frente ("trocar o e-mail", para trás) e mantém o 
   assert.equal(await sentido(page), 'volta');
   await fimDaPassagem(page);
   assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'Seu e-mail da Unicamp');
+  await fechar();
+});
+
+// as animações da View Transition em curso: paradas em f do caminho (cada uma no seu tempo) ou, sem f, levadas ao fim
+const pararPassagem = (page, f = null) => page.evaluate(f => document.getAnimations().filter(a => (a.effect.pseudoElement || '').startsWith('::view-transition'))
+  .forEach(a => { if (f === null) a.finish(); else { a.pause(); a.currentTime = a.effect.getComputedTiming().activeDuration * f; } }), f);
+// fotos do cabide, da marca (o palco), do pé e dos passos do painel, cada uma no recorte do que mostra (no celular os lados não têm caixa)
+async function fotosDaEntrada(page) {
+  const recortes = await page.evaluate(() => ['#marca', '.palco > *', '.pe > *', '.passos'].map(s => {
+    const r = [...document.querySelectorAll(s)].map(e => e.getBoundingClientRect());
+    const x = Math.max(0, Math.floor(Math.min(...r.map(q => q.left)))), y = Math.floor(Math.min(...r.map(q => q.top)));
+    return { x, y, width: Math.ceil(Math.max(...r.map(q => q.right))) - x, height: Math.ceil(Math.max(...r.map(q => q.bottom))) - y };
+  }));
+  const fotos = [];
+  for (const clip of recortes) fotos.push(await page.screenshot({ clip }));
+  return fotos;
+}
+// a maior diferença de cor (0 a 255) entre duas fotos do mesmo recorte, lidas pelo navegador
+const diferenca = (page, a, b) => page.evaluate(async fotos => {
+  const [x, y] = await Promise.all(fotos.map(async f => {
+    const i = await createImageBitmap(await (await fetch('data:image/png;base64,' + f)).blob());
+    const c = new OffscreenCanvas(i.width, i.height).getContext('2d');
+    c.drawImage(i, 0, 0);
+    return c.getImageData(0, 0, i.width, i.height).data;
+  }));
+  return x.reduce((m, v, k) => Math.max(m, Math.abs(v - y[k])), 0);
+}, [a, b].map(f => f.toString('base64')));
+
+test('entre dois passos da entrada só o passo desliza: o cabide, a marca e o pé ficam parados (celular e computador)', async () => {
+  for (const [largura, altura] of [[390, 844], [1280, 720]]) {
+    const { page, fechar } = await naEntrada({ largura, altura });
+    // a passagem parada no começo e no meio, foto a foto, contra a tela que fica depois dela
+    const passagem = async (rotulo, tocar) => {
+      await tocar();
+      await page.waitForFunction(() => document.getAnimations().some(a => (a.effect.pseudoElement || '').startsWith('::view-transition')), null, { timeout: 2000 });
+      const durante = [];
+      for (const f of [.1, .5]) { await pararPassagem(page, f); durante.push([f, await fotosDaEntrada(page)]); }
+      await pararPassagem(page); await fimDaPassagem(page);
+      const depois = await fotosDaEntrada(page);
+      for (const [f, fotos] of durante) {
+        const d = [];
+        for (const [k, foto] of fotos.entries()) d.push(await diferenca(page, foto, depois[k]));
+        // a mesma foto em fusão cruzada difere em 1; o que anda ou escurece, em dezenas ou mais
+        assert.ok(d.slice(0, 3).every(x => x <= 8) && d[3] > 100, `${largura} px, ${rotulo}, ${f * 100}% do caminho: cabide, marca, pé, passos = ${d.join(', ')}`);
+      }
+    };
+    await page.getByLabel('Seu e-mail da Unicamp').fill('d000000@dac.unicamp.br');
+    await passagem('e-mail → código', () => page.getByRole('button', { name: 'Receber o código' }).click());
+    await passagem('"trocar o e-mail"', () => page.getByRole('button', { name: 'trocar o e-mail' }).click());
+    await fechar();
+  }
+});
+
+test('do último passo para o app, como antes: sem passagem, a tela do app chega com a entrada escalonada', async () => {
+  const { page, fechar } = await naEntrada({
+    antes: () => {
+      window.__vistos = [];
+      new MutationObserver(ms => ms.forEach(() => window.__vistos.push(document.documentElement.dataset.passagem || '')))
+        .observe(document, { subtree: true, attributes: true, attributeFilter: ['data-passagem'] });
+    },
+  });
+  await ateOPerfil(page); await fimDaPassagem(page);
+  await page.evaluate(() => { window.__vistos = []; }); // os passos da entrada deslizam: só conta daqui
+  await page.getByLabel('Seu nome').fill('Deco');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await page.locator('#conta').filter({ hasText: 'Deco' }).waitFor();
+  assert.deepEqual(await page.evaluate(() => window.__vistos), []);
+  assert.equal(await page.locator('#tela.entra').count(), 1);
   await fechar();
 });
 

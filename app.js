@@ -276,7 +276,8 @@ function primeiraVez() {
   const aviso = frase('');
   aviso.hidden = true;
   const dizer = texto => { aviso.textContent = texto; aviso.hidden = false; };
-  // troca de passo: redesenha, faz o painel chegar e leva o foco ao primeiro campo; "trocar o e-mail" é um passo para trás
+  // troca de passo: redesenha, faz o painel chegar e leva o foco ao primeiro campo; "trocar o e-mail" é um passo para trás.
+  // Com a passagem, só o passo desliza: o cabide, a marca e o pé ficam parados (o true no fim marca a passagem de passo; estilo.css)
   const ir = (passo, foco, sentido = 'ida') => {
     clearTimeout(acessoTimer); acessoTimer = null;
     acesso = passo;
@@ -284,7 +285,7 @@ function primeiraVez() {
       desenhar();
       if (!passagemAnima()) document.querySelector('#tela .painel').classList.add('chega'); // a passagem já é o movimento da tela nova
       document.querySelector(foco).focus();
-    });
+    }, true);
   };
   const d = DADOS.DROP, ficha = el('p', { className: 'ficha lab' });
   ficha.append(el('span', { textContent: 'O brechó do campus' }), el('span', { textContent: 'Limeira · ' + new Date().getFullYear() }));
@@ -990,7 +991,7 @@ function desenhar() {
 }
 
 // Troca de tela com movimento: o sentido (Logica.passagem) fica em <html data-passagem> enquanto a View Transition roda, e o estilo.css anima.
-// Sem sentido, sem a API ou para quem pede menos movimento, troca na hora, como sempre.
+// Entre dois passos da entrada (passo), <html data-passo> vai junto. Sem sentido, sem a API ou para quem pede menos movimento, troca na hora, como sempre.
 let transicao = null; // a View Transition em curso
 const passagemAnima = () => !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1004,7 +1005,7 @@ function soltarFoto() {
   document.body.classList.remove('pousando');
 }
 
-function trocar(passagem, fazer) {
+function trocar(passagem, fazer, passo = false) {
   const html = document.documentElement;
   // A folha arrastada entra na foto da tela antiga como está, e a 'desce' parte do --arraste dela (estilo.css); a página só volta ao lugar
   // na tela nova. Tirar o deslocamento antes da foto mostraria um quadro com a folha no alto. Nenhuma outra passagem herda o --arraste.
@@ -1014,10 +1015,11 @@ function trocar(passagem, fazer) {
   if (transicao) transicao.skipTransition(); // um toque no meio: a passagem de antes acaba na hora e a nova parte dali
   document.querySelectorAll('.camada-fantasma').forEach(c => c.remove()); // a passagem já responde ao toque
   html.dataset.passagem = passagem;
+  html.toggleAttribute('data-passo', passo); // toda passagem diz se é de passo: a de passo pulada não a deixa para a seguinte
   const t = transicao = document.startViewTransition(feito);
   t.ready.catch(() => {}); // a passagem pulada rejeita o ready; não é erro
-  // a que foi pulada não apaga a marca nem o --arraste da que começou depois
-  t.finished.finally(() => { soltarFoto(); if (transicao === t) { transicao = null; delete html.dataset.passagem; html.style.removeProperty('--arraste'); } });
+  // a que foi pulada não apaga as marcas nem o --arraste da que começou depois
+  t.finished.finally(() => { soltarFoto(); if (transicao === t) { transicao = null; delete html.dataset.passagem; delete html.dataset.passo; html.style.removeProperty('--arraste'); } });
 }
 
 // ---------- Folha que fecha arrastando ----------
