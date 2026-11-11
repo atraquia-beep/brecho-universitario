@@ -58,3 +58,20 @@ test('pontuação nunca cai sozinha na linha de baixo', async () => {
     await fechar();
   }
 });
+test('números firmes, frases equilibradas e botões que afundam ao toque', async () => {
+  const { page, passar, fechar } = await abrir({ movimento: 'no-preference' }); await entrar(page);
+  const css = (sel, prop) => page.evaluate(([s, p]) => getComputedStyle(document.querySelector(s))[p], [sel, prop]);
+  const afunda = async alvo => {
+    await alvo.hover(); await page.mouse.down(); await page.waitForTimeout(200);
+    const t = await alvo.evaluate(e => getComputedStyle(e).transform); await page.mouse.move(1, 1); await page.mouse.up(); // solta fora: não vira clique
+    assert.match(t, /^matrix\(0\.97,/);
+  };
+  await page.waitForTimeout(1500); // a entrada escalonada da vitrine corre em tempo real
+  await afunda(page.locator('.vitrine-peca').first());
+  await afunda(page.locator('#abas a').nth(1));
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click(); await passar(10000); await page.locator('#drop').waitFor();
+  for (const s of ['#resta', '#placar', '#conta']) assert.match(await css(s, 'fontVariantNumeric'), /tabular-nums/, s);
+  assert.equal(await css('.folha .frase', 'textWrap'), 'balance');
+  await afunda(page.getByRole('button', { name: 'É minha' }));
+  await fechar();
+});

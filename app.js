@@ -774,7 +774,7 @@ function telaVender() {
   if (!venda) iniciarVenda();
   const v = venda, a = v.anuncio, din = Logica.dinheiro;
   // no visor e no "Olhando…" a imagem ocupa a tela inteira, com o texto por cima, embaixo
-  const visor = el('div', { className: 'foto visor' + (v.passo === 'visor' || v.passo === 'olhando' ? ' cheio' : '') });
+  const visor = el('div', { className: 'foto visor' + (v.passo === 'visor' || v.passo === 'olhando' ? ' cheio' : '') + (v.passo === 'olhando' ? ' olhando' : '') });
   const rodape = el('div', { className: 'rodape' });
   if (v.passo === 'visor') {
     // "escolher uma foto" sempre existe; o disparo e os cantos só depois de o visor estar decidido

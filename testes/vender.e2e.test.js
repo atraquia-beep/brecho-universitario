@@ -174,3 +174,19 @@ test('enquanto a câmera não responde, já dá para escolher uma foto', async (
   await page.getByRole('button', { name: 'Anunciar no drop' }).waitFor();
   await fechar();
 });
+test('olhando varre a foto e a palavra afunda ao toque', async () => {
+  const { page, passar, fechar } = await abrir({ movimento: 'no-preference' }); await entrar(page);
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
+  await page.getByText('Sem câmera aqui: usei uma peça de exemplo.').waitFor();
+  await page.getByRole('button', { name: 'Fotografar' }).click();
+  await page.locator('.visor.olhando').waitFor();
+  assert.notEqual(await page.evaluate(() => getComputedStyle(document.querySelector('.visor'), '::after').animationName), 'none');
+  await passar(1200);
+  await page.getByText(/Parece uma jaqueta jeans/).waitFor();
+  assert.equal(await page.locator('.visor.olhando').count(), 0);
+  const p = page.locator('.palavra').first();
+  const grossura = () => p.evaluate(e => parseFloat(getComputedStyle(e).textDecorationThickness));
+  const solta = await grossura(); await p.hover(); await page.mouse.down(); await page.waitForTimeout(200);
+  assert.ok(await grossura() > solta); await page.mouse.up();
+  await fechar();
+});

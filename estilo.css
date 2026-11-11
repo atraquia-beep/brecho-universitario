@@ -197,6 +197,8 @@ body.ao-vivo #marca, body.ao-vivo #conta { color: var(--creme); }
 .carimbo.direita { left: 22px; transform: rotate(-10deg); background: var(--cor); border-color: var(--cor); color: #000; text-shadow: none; }
 .carimbo.esquerda { right: 22px; transform: rotate(10deg); }
 .pilulas { position: absolute; top: 72px; left: 20px; right: 20px; z-index: 1; display: flex; justify-content: space-between; pointer-events: none; }
+#resta, #placar, #cronometro, #conta { font-variant-numeric: tabular-nums; }
+.folha .frase { text-wrap: balance; }
 #resta::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--cor); margin-right: 6px; }
 .folha { position: relative; padding: 20px 24px 22px; background: #000; color: var(--creme); }
 .folha .frase { margin-bottom: 6px; font-size: 21px; }
@@ -345,7 +347,16 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   #tela.entra #peca { animation: da-pilha .5s var(--expo) var(--atraso, 0ms) backwards; }
   /* a folha largada antes do limite volta com a mesma mola */
   html:has(> body.folha-volta) { transition: --arraste .5s var(--mola); }
+  /* a luz que varre a foto no "Olhando…": no lugar da sombra de cima, uma faixa de 18% que desce em 1,1 s, em volta */
+  .visor.olhando::after { height: 18%; top: 0; background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, .38) 55%, rgba(255, 255, 255, 0)); animation: varre 1.1s linear infinite; }
+  /* o toque afunda: desce em 100 ms, volta na curva do app. A palavra é texto corrido: engrossa o traço e esmaece */
+  .principal, #marca, #conta, #disparo, #abas a, .vitrine-peca { transition: transform .35s var(--expo); }
+  .principal { transition: color .4s var(--expo), transform .35s var(--expo); }
+  .principal:active, #marca:active, #conta:active, #disparo:active, #abas a:active, .vitrine-peca:active { transform: scale(.97); transition-duration: .1s; transition-timing-function: ease-out; }
+  .palavra { transition: opacity .35s var(--expo), text-decoration-thickness .35s var(--expo); }
+  .palavra:active { text-decoration-thickness: 2px; opacity: .7; transition-duration: .1s; }
 }
+@keyframes varre { from { transform: translateY(-100%); } to { transform: translateY(555%); } }
 @keyframes da-pilha { from { transform: scale(calc(.94 + .06 * var(--puxou, 0))); filter: brightness(calc(.6 + .4 * var(--puxou, 0))); } }
 @keyframes recua { to { transform: translateX(-28%); filter: brightness(.6); } }
 @keyframes volta-da-esquerda { from { transform: translateX(-28%); filter: brightness(.6); } }
