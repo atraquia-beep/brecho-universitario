@@ -28,10 +28,6 @@ async function capturar(largura, altura) {
   await foto('primeira-vez');
   await entrar(page);
   await foto('espera');
-  await page.getByLabel('Diga o que procura').fill('um blazer para a entrevista de quinta');
-  await page.getByLabel('Diga o que procura').press('Enter');
-  await page.getByText(/^Anotado:/).waitFor();
-  await foto('espera-pedido');
   await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
   await page.getByRole('button', { name: 'Fotografar' }).waitFor();
   await foto('vender-visor');

@@ -63,22 +63,6 @@ test('a pilha termina antes do tempo', async () => {
   await page.reload(); await page.getByText('O drop acabou.').waitFor();
   await fechar();
 });
-test('o pedido abre a pilha e some depois do drop', async () => {
-  const { page, passar, fechar } = await abrir(); await entrar(page);
-  await page.getByLabel('Diga o que procura').fill('um blazer para a entrevista de quinta'); await page.getByLabel('Diga o que procura').press('Enter');
-  await aoVivo(page, passar);
-  assert.match(await frase(page), /^Blazer preto, M, pouco uso\. R\$\s38\.$/);
-  await page.getByText('Você pediu: um blazer para a entrevista de quinta').waitFor();
-  await page.getByRole('button', { name: 'É minha' }).click();
-  await page.getByText('É seu. O blazer preto do Rafa espera você terça, das 12h às 13h, no ponto da FCA. Mostre este código:').waitFor();
-  await page.getByRole('button', { name: 'Voltar ao drop' }).click(); await page.locator('#drop').waitFor();
-  await passar(600000);
-  await page.getByText('O drop acabou. Você ficou com uma peça.').waitFor();
-  await page.getByRole('button', { name: 'Voltar' }).click();
-  assert.equal((await salvo(page)).pedido, null);
-  await page.getByText('Deco, treze peças entram juntas. Cinco são M, na sua pegada.').waitFor();
-  await fechar();
-});
 test('retirada depois do drop, com o contador do curso', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page); await aoVivo(page, passar);
   await page.getByRole('button', { name: 'É minha' }).click();

@@ -27,7 +27,7 @@ body {
 }
 :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 /* toques seguidos ("passo", "passo"…) não dão zoom no iPhone */
-.palavra, .principal, #disparo, #pedido button, .topo a { touch-action: manipulation; }
+.palavra, .principal, #disparo, .topo a { touch-action: manipulation; }
 
 .topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 #marca { color: var(--tinta); display: block; }
@@ -129,9 +129,9 @@ p { margin: 0 0 16px; }
 .teaser img:nth-child(2) { left: 30%; top: 0; transform: rotate(3deg); }
 .teaser img:nth-child(3) { left: 60%; top: 10px; transform: rotate(-3deg); }
 .teaser span { position: absolute; left: 0; right: 0; top: 52px; width: max-content; margin: 0 auto; padding: 6px 10px; border-radius: 99px; background: rgba(0, 0, 0, .82); font-size: 11px; font-weight: 500; line-height: 1.2; text-transform: uppercase; letter-spacing: .04em; color: var(--creme); }
-/* tela baixa (celular com as barras do navegador à mostra): o teaser e o botão encolhem para as ações ficarem acima do campo do pedido */
+/* tela baixa (celular com as barras do navegador à mostra): o teaser e o botão encolhem para as ações caberem na tela */
 @media (max-height: 700px) and (max-width: 899px) {
-  /* celular baixo: as peças borradas saem para a frase da arara caber e as ações da espera ficarem acima do campo do pedido */
+  /* celular baixo: as peças borradas saem para a frase da arara caber e as ações da espera caberem na tela */
   .teaser { display: none; }
   .principal { min-height: 46px; }
   .regua { margin: 10px 0 12px; }
@@ -139,19 +139,6 @@ p { margin: 0 0 16px; }
 .final { margin-top: auto; }
 .principal.final { margin-bottom: 10px; }
 p.final { margin-bottom: 8px; }
-body.com-pedido { padding-bottom: 96px; }
-
-/* Campo do pedido: fixo no rodapé, na coluna do celular, uma linha, sem caixa. */
-#pedido {
-  position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 430px; padding: 8px 24px 22px; display: flex;
-  background: linear-gradient(currentColor, currentColor) no-repeat 24px calc(100% - 22px) / calc(100% - 48px) 1px, var(--fundo);
-  color: var(--tinta);
-}
-#pedido input { flex: 1; min-width: 0; font: inherit; font-size: 21px; letter-spacing: inherit; color: inherit; background: none; border: 0; border-radius: 0; padding: 6px 0; }
-#pedido input::placeholder { color: inherit; opacity: .75; }
-#pedido:focus-within { background-size: calc(100% - 48px) 2px, auto; }
-#pedido input:focus-visible { outline: 0; }
-#pedido button { font: inherit; font-size: 18px; color: inherit; background: none; border: 0; cursor: pointer; padding: 6px 0 6px 12px; }
 
 /* Drop no ar: a foto ocupa a tela, a folha preta fica embaixo; o topo segue clicável sobre a foto. */
 body.ao-vivo .topo { position: relative; z-index: 2; }
@@ -274,7 +261,6 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   /* a coluna dos números gigantes passa a ser o palco: 55% da área útil */
   :root { --coluna: calc((min(100vw, 1440px) - 136px) * .55); }
   body { max-width: 1440px; padding: 30px 40px; font-size: 24px; }
-  body.com-pedido { padding-bottom: 30px; }
   .largo { display: block; }
   #marca svg { width: 44px; height: 34px; }
   #conta, #ir-arara, .apoio { font-size: 14px; }
@@ -300,16 +286,13 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   .visto { width: 72px; height: 88px; }
   .confere .digito { transform: translateX(calc(var(--n) * -82px)); }
 
-  /* Espera: as peças borradas ocupam o painel; o pedido fica na linha de baixo do palco */
+  /* Espera: as peças borradas ocupam o painel */
   .teaser { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; }
   .teaser img { width: 46%; height: 60%; filter: blur(12px) saturate(.9); }
   .teaser img:nth-child(1) { left: 0; top: 16%; }
   .teaser img:nth-child(2) { left: 27%; top: 6%; }
   .teaser img:nth-child(3) { left: 54%; top: 22%; }
   .teaser span { top: 44%; }
-  #pedido { position: static; max-width: none; width: var(--coluna); margin: 14px 0 0; padding: 0; background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 100% 1px; }
-  #pedido:focus-within { background-size: 100% 2px; }
-  #pedido input { font-size: 24px; }
 
   /* Drop no ar: a foto à esquerda, a folha à direita, na janela inteira */
   #drop { max-width: none; flex-direction: row; }

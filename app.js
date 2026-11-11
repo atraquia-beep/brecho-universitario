@@ -349,7 +349,6 @@ function primeiraVez() {
 }
 
 let ultimaTela = null;      // tela principal desenhada por último (o tique compara com ela)
-let naoEntendi = false;     // mostra a frase de "não entendi" só no próximo desenho
 
 const rotaAtual = () => location.hash.replace(/^#\/?/, '').split('/')[0];
 
@@ -362,12 +361,12 @@ function botaoPalavra(texto, aoTocar) {
   return b;
 }
 
-const pilhaAtual = () => Logica.ordenarPilha(DADOS.CATALOGO, estado.perfil, estado.pedido, Logica.foraDaPilha(estado));
+const pilhaAtual = () => Logica.ordenarPilha(DADOS.CATALOGO, estado.perfil, null, Logica.foraDaPilha(estado));
 const feminina = peca => DADOS.TIPOS[peca.tipo].genero === 'f';
 const pecaPorId = id => DADOS.CATALOGO.concat(DADOS.ARARA).find(p => p.id === id);
 const daArara = id => DADOS.ARARA.some(p => p.id === id);
 
-// nós que ficam acima do rótulo: reservas por retirar, "não entendi" e o pedido anotado
+// nós que ficam acima do rótulo: reservas por retirar
 function avisosDaEspera() {
   const nos = [];
   estado.reservas.filter(r => !r.retirada).forEach(r => {
@@ -378,14 +377,6 @@ function avisosDaEspera() {
       textContent: (feminina(peca) ? 'Sua ' : 'Seu ') + peca.nome.toLowerCase() + ' espera você ' + r.janela + '. Código ' + r.codigo + '.',
     })));
   });
-  if (naoEntendi) {
-    nos.push(apoio('Não entendi que peça você procura. Tente algo como "um blazer para a entrevista".'));
-    naoEntendi = false;
-  }
-  if (estado.pedido) {
-    nos.push(apoio('Anotado: "' + estado.pedido + '". O que combinar com isso abre a sua pilha no próximo drop. ',
-      botaoPalavra('esquecer', () => { mudar(Logica.esquecerPedido(estado)); document.getElementById('rotulo').focus(); })));
-  }
   return nos;
 }
 
@@ -560,9 +551,6 @@ function secaoDaPeca(rotulo, peca, proxima, pilulas, meio, fim) {
 function telaNoAr(sit) {
   const pilha = pilhaAtual(), peca = pilha[0];
   const meio = [];
-  if (estado.pedido && Logica.buscar([peca], Logica.entenderPedido(estado.pedido, estado.perfil), []).length) {
-    meio.push(apoio('Você pediu: ' + estado.pedido)); // texto da pessoa: só textContent
-  }
   const aviso = el('div', { id: 'aviso', hidden: true });
   aviso.setAttribute('aria-live', 'polite');
   meio.push(aviso);
@@ -810,9 +798,8 @@ function recomecar() {
   try { localStorage.removeItem(CHAVE); } catch (e) { /* sem armazenamento: nada a apagar */ }
   estado = Logica.estadoInicial();
   rascunho = perfilPadrao();
-  comoFoi = null; naoEntendi = false; apagando = false; ultimaTela = null; pecaNaTela = null; acesso = 'email';
+  comoFoi = null; apagando = false; ultimaTela = null; pecaNaTela = null; acesso = 'email';
   clearTimeout(avisoTimer);
-  document.getElementById('pedido-campo').value = '';
   aplicarRealce();
   atualizarConta();
   abertura(); // regravar começa pela abertura
@@ -922,11 +909,6 @@ function desenhar() {
   if (nos === false) { location.replace('#/'); return; }
   document.body.classList.toggle('escuro', !!rota.escura);
   barra();
-  const principalNa = tela => rota === rotas[''] && ultimaTela === tela;
-  // o campo do pedido só existe na espera
-  const comPedido = principalNa('espera');
-  document.getElementById('pedido').hidden = !comPedido;
-  document.body.classList.toggle('com-pedido', comPedido);
   // a peça em tela cheia (drop ou arara) põe o topo claro sobre a foto
   document.body.classList.toggle('ao-vivo', nos.some(n => n.id === 'drop'));
   document.body.classList.toggle('vendendo', rota === rotas.vender);
@@ -1006,16 +988,6 @@ document.addEventListener('keydown', e => {
   if (aberta || !document.getElementById('drop') || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   e.preventDefault();
   if (e.key === 'ArrowRight') pegarPeca(); else passarPeca();
-});
-document.getElementById('pedido').addEventListener('submit', e => {
-  e.preventDefault();
-  const c = document.getElementById('pedido-campo'), texto = c.value.trim();
-  if (!texto) return;
-  if (!Logica.entenderPedido(texto, estado.perfil).tipos.length) { naoEntendi = true; desenhar(); }
-  else { c.value = ''; mudar(Logica.pedir(estado, texto)); }
-  // o teclado do celular fecha e a resposta, no alto da tela, fica à vista
-  c.blur();
-  scrollTo(0, 0);
 });
 document.addEventListener('touchstart', () => {}, { passive: true }); // o Safari do iPhone só mostra :active (o toque do botão) com um ouvinte de toque
 window.addEventListener('resize', encaixarTudo);

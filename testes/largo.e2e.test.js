@@ -40,16 +40,12 @@ test('tela larga: a entrada tem o palco preto à esquerda e o painel creme à di
 });
 test('tela larga: espera, vender, drop, é sua e você, lado a lado e sem rolagem lateral', async () => {
   const { page, passar, fechar } = await abrir({ largura: 1280, altura: 720 }); await entrar(page);
-  // espera: números no palco, peças borradas no painel, pedido na linha de baixo do palco
+  // espera: números no palco, peças borradas no painel
   let palco = await caixa(page, '.palco');
-  const contagem = await caixa(page, '#contagem'), teaser = await caixa(page, '.teaser'), pedido = await caixa(page, '#pedido');
+  const contagem = await caixa(page, '#contagem'), teaser = await caixa(page, '.teaser');
   assert.ok(contagem.d <= palco.d + 1 && contagem.l >= palco.l * .9, 'contagem ocupa o palco');
   assert.ok(teaser.e >= palco.d && teaser.a > 300, 'peças borradas no painel');
-  assert.equal(await css(page, '#pedido', 'position'), 'static');
-  assert.ok(Math.abs(pedido.e - palco.e) <= 1 && Math.abs(pedido.l - palco.l) <= 1 && pedido.t >= (await caixa(page, '.pe')).b, 'pedido embaixo do palco');
   await semRolagem(page, 'espera', true);
-  await page.getByLabel('Diga o que procura').fill('um blazer para a entrevista de quinta'); await page.getByLabel('Diga o que procura').press('Enter');
-  await page.getByText(/^Anotado:/).waitFor(); await semRolagem(page, 'espera com pedido', true);
   // vender: o visor é a metade esquerda da janela; as frases ficam no painel
   await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
   await page.getByText('Fotografe a peça. Eu digo o que é e sugiro o preço.').waitFor();
@@ -108,7 +104,6 @@ test('celular: os lados não existem, o que é só da tela larga some e a fila s
   assert.ok(await topo('.fecho') > await topo('.principal'), 'o fecho da capa fica depois do botão');
   await entrar(page);
   assert.ok(await topo('.teaser') < await topo('.principal'), 'as peças borradas ficam antes do botão');
-  assert.equal(await css(page, '#pedido', 'position'), 'fixed');
   await page.getByRole('link', { name: 'vender uma peça para este drop' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor();
   assert.equal(await page.getByText('Fotografe a peça. Eu digo o que é e sugiro o preço.').isVisible(), false);
   assert.equal(await page.locator('#ir-arara').isVisible(), false); // na câmera o cronômetro ocupa o canto

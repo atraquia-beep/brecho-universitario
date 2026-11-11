@@ -79,9 +79,8 @@ test('anunciar funciona mesmo sem conseguir gravar', async () => {
   await page.getByText(/^No drop em 19 segundos\./).waitFor();
   await fechar();
 });
-test('sua peça é levada no drop e o crédito paga o blazer que você pediu', async () => {
+test('sua peça é levada no drop e o crédito cobre a próxima peça', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page);
-  await page.getByLabel('Diga o que procura').fill('um blazer para a entrevista de quinta'); await page.getByLabel('Diga o que procura').press('Enter');
   await anunciarExemplo(page, passar); await page.getByRole('button', { name: 'Voltar' }).click();
   await aoVivo(page, passar);
   await passar(4800); assert.equal((await salvo(page)).creditos, 0);
@@ -89,23 +88,24 @@ test('sua peça é levada no drop e o crédito paga o blazer que você pediu', a
   await page.getByText(/A Bia, de Nutrição, levou sua jaqueta jeans\. Entraram R\$\s35 em créditos\./).waitFor();
   assert.match(await page.locator('#conta').innerText(), /R\$\s35 em créditos/);
   await page.getByRole('button', { name: 'passo' }).click();
-  await page.getByText(/· sai de graça com seus créditos/).waitFor();                       // blazer bege, R$ 30
+  await page.getByText(/· sai de graça com seus créditos/).waitFor();                       // camisa xadrez, R$ 25
   await page.reload(); await page.locator('#drop').waitFor();
   assert.equal((await salvo(page)).anuncios[0].vendida, true);
   await fechar();
 });
 test('crédito parcial, crédito total e Pix', async () => {
   let a = await abrir(); await entrar(a.page);
-  await a.page.getByLabel('Diga o que procura').fill('um blazer para a entrevista de quinta'); await a.page.getByLabel('Diga o que procura').press('Enter');
   await anunciarExemplo(a.page, a.passar); await a.page.getByRole('button', { name: 'Voltar' }).click();
   await aoVivo(a.page, a.passar); await a.passar(5000);
+  await a.page.getByRole('button', { name: 'passo' }).click(); await a.page.getByRole('button', { name: 'passo' }).click(); // moletom preto, R$ 40
   await a.page.getByRole('button', { name: 'É minha' }).click();
-  await a.page.getByText(/Seus R\$\s35 em créditos já entraram\. Faltam R\$\s3, pagos na hora\./).waitFor();
+  await a.page.getByText(/Seus R\$\s35 em créditos já entraram\. Faltam R\$\s5, pagos na hora\./).waitFor();
   assert.match(await a.page.locator('#conta').innerText(), /R\$\s0 em créditos/);
   await a.page.getByRole('button', { name: 'Cancelar a reserva' }).click(); await a.page.locator('#drop').waitFor();
-  await a.page.getByRole('button', { name: 'passo' }).click(); await a.page.getByRole('button', { name: 'É minha' }).click();
+  await a.page.getByRole('button', { name: 'passo' }).click(); await a.page.getByRole('button', { name: 'passo' }).click(); // camiseta azul, R$ 15
+  await a.page.getByRole('button', { name: 'É minha' }).click();
   await a.page.getByText('Seus créditos pagaram tudo.').waitFor();
-  assert.match(await a.page.locator('#conta').innerText(), /R\$\s5 em créditos/);
+  assert.match(await a.page.locator('#conta').innerText(), /R\$\s20 em créditos/);
   await a.fechar();
   a = await abrir(); await entrar(a.page);
   await ateOPalpite(a.page, a.passar);
