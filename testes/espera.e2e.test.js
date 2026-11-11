@@ -1,4 +1,5 @@
 const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar, salvo, aoVivo } = require('./apoio.js');
+const D = require('../dados.js');
 const ARARA_DO_DECO = ['bomber-terracota-tiago', 'sueter-marinho-helena', 'jaqueta-jeans-cinza-murilo', 'sueter-creme-sofia', 'camisa-manga-curta-iara'];
 const FRASE_DO_DROP = 'Catorze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Sete são M.';
 test('início: as peças à venda primeiro, depois o drop explicado', async () => {
@@ -60,6 +61,18 @@ test('início: tocar numa foto abre a arara do começo, e o toque duplo em É mi
 test('perfil fora do roteiro', async () => {
   const { page, fechar } = await abrir(); await entrar(page, { tamanho: 'GG', pegadas: ['esportivo'], teto: 20 });
   await page.getByText('Catorze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Uma é GG.').waitFor();
+  await fechar();
+});
+test('espera: textos raros da vitrine e do drop', async () => {
+  // GG, quatro das cinco peças da arara reservadas e o moletom (a única GG do catálogo) reservado no drop de segunda, o que o tira da próxima pilha
+  const reserva = (p, codigo, drop) => ({ pecaId: p.id, codigo, janela: 'terça, das 12h às 13h', creditosUsados: 0, aPagar: p.preco, retirada: false, nota: null, drop });
+  const reservas = D.ARARA.slice(1).map((p, i) => reserva(p, 'AB2' + i, null))
+    .concat(reserva(D.CATALOGO.find(p => p.id === 'moletom-branco-marina'), 'AB29', Date.parse('2026-11-09T20:00:00-03:00')));
+  const estado = { perfil: { nome: 'Deco', tamanho: 'GG', pegadas: ['vintage', 'street'], teto: 40, curso: 'Administração', email: 'd000000@dac.unicamp.br' }, creditos: 0, reservas, anuncios: [], pedido: null, acordar: false, realce: '#FF0000', ultimoAnuncioSeg: null, ensaio: null, drop: null };
+  const { page, fechar } = await abrir({ antes: 'localStorage["brecho.v2"] = ' + JSON.stringify(JSON.stringify(estado)) });
+  await page.locator('.painel > .ficha').getByText('1 peça', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Ver a peça' }).waitFor();
+  await page.getByText('Treze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Nenhuma é GG desta vez.').waitFor();
   await fechar();
 });
 test('ensaio: a contagem zera e a tela vira o drop sozinha', async () => {

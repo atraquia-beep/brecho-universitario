@@ -38,7 +38,7 @@ test('arara: fora do drop dá para olhar, passar e pegar uma peça, e ela vira r
   // de volta ao início pela barra: a reserva aparece e as peças à venda desceram para quatro
   await page.locator('#abas').getByRole('link', { name: 'Comprar' }).click();
   await page.getByRole('button', { name: 'Ver as 4 peças' }).waitFor();
-  await page.getByText(/^Seu suéter azul-marinho espera você/).waitFor();
+  await page.getByText(/^Seu suéter azul-marinho: retirada terça, 12h–13h\. Código\s[A-HJKMNP-Z2-9]{4}\.$/).waitFor();
   await page.getByText(FRASE_DO_DROP).waitFor(); // o drop não perdeu nada
   await page.reload(); await page.getByRole('button', { name: 'Ver as 4 peças' }).waitFor();
   await fechar();

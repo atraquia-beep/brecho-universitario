@@ -370,7 +370,7 @@ function avisosDaEspera() {
     if (!peca) return;
     nos.push(apoio(Object.assign(document.createElement('a'), {
       className: 'palavra', href: '#/sua/' + peca.id,
-      textContent: (feminina(peca) ? 'Sua ' : 'Seu ') + peca.nome.toLowerCase() + ' espera você ' + r.janela + '. Código ' + r.codigo + '.',
+      textContent: (feminina(peca) ? 'Sua ' : 'Seu ') + peca.nome.toLowerCase() + ': retirada ' + r.janela.replace('das ', '').replace(' às ', '–') + '. Código\u00a0' + r.codigo + '.',
     })));
   });
   return nos;

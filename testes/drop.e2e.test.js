@@ -70,13 +70,13 @@ test('retirada depois do drop, com o contador do curso', async () => {
   await page.locator('#marca').click(); await page.locator('#drop').waitFor();
   await passar(600000); await page.getByRole('button', { name: 'Voltar' }).click();
   await page.getByText('Treze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Seis são M.').waitFor();
-  await page.getByRole('link', { name: /^Sua jaqueta jeans espera você terça, das 12h às 13h\. Código [A-HJKMNP-Z2-9]{4}\.$/ }).click();
+  await page.getByRole('link', { name: /^Sua jaqueta jeans: retirada terça, 12h–13h\. Código [A-HJKMNP-Z2-9]{4}\.$/ }).click();
   await page.getByRole('button', { name: 'Já retirei' }).click();
   await page.getByText('Como foi com a Ana?').waitFor();
   await page.getByRole('button', { name: 'ótimo', exact: true }).click();
   await page.getByText('Obrigado. Uma peça a menos no lixo: Administração chegou a 129.').waitFor();
   await page.getByRole('button', { name: 'Voltar' }).click();
-  assert.equal(await page.getByRole('link', { name: /^Sua jaqueta jeans espera você/ }).count(), 0);
+  assert.equal(await page.getByRole('link', { name: /^Sua jaqueta jeans: retirada/ }).count(), 0);
   await fechar();
 });
 test('cancelar, toque duplo, endereço quebrado e voltar do navegador', async () => {

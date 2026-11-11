@@ -20,7 +20,7 @@ test('roteiro do vídeo de ponta a ponta', async () => {
   await passar(600000);
   await page.getByText('O drop acabou. Você ficou com uma peça.').waitFor();
   await page.getByRole('button', { name: 'Voltar' }).click();
-  await page.getByRole('link', { name: /^Sua camisa xadrez espera você terça, das 12h às 13h\. Código [A-HJKMNP-Z2-9]{4}\.$/ }).click();
+  await page.getByRole('link', { name: /^Sua camisa xadrez: retirada terça, 12h–13h\. Código [A-HJKMNP-Z2-9]{4}\.$/ }).click();
   await page.getByRole('button', { name: 'Já retirei' }).click();
   await page.getByRole('button', { name: 'ótimo', exact: true }).click();
   await page.getByText('Obrigado. Uma peça a menos no lixo: Administração chegou a 129.').waitFor();
