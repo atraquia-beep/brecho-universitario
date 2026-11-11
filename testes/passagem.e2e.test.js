@@ -443,6 +443,22 @@ test('alça tocada fecha como o Voltar: É seu da arara volta à arara, Vender v
   await fechar();
 });
 
+test('a alça pelo teclado fecha para o mesmo destino, até logo depois de um arraste curto (Enter e espaço)', async () => {
+  const { page, fechar } = await abrir(); await entrar(page);
+  await emEseu(page);
+  // o clique do teclado não tem dedo (detail 0): o arraste de antes não o anula
+  await puxarAlca(page, await alto(page) * .15); await page.mouse.up();
+  await page.locator('.alca').focus(); await page.keyboard.press('Enter');
+  await page.locator('#drop').waitFor({ timeout: 5000 });
+  assert.equal(await page.evaluate(() => location.hash), '#/arara');
+  await page.locator('#marca').click(); await page.locator('.contagem').waitFor();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor();
+  await page.locator('.alca').focus(); await page.keyboard.press('Space');
+  await page.locator('.contagem').waitFor({ timeout: 5000 });
+  assert.equal(await page.evaluate(() => location.hash), '#/');
+  await fechar();
+});
+
 test('depois de fechar arrastando, a próxima desce parte do zero', async () => {
   const { page, fechar } = await comMovimento();
   await emEseu(page);
@@ -478,20 +494,25 @@ test('movimento reduzido: a alça fecha no toque e no arraste, sem passagem; arr
   await fechar();
 });
 
-test('a alça fica no alto, no meio, com toque folgado e sem encostar no cabide nem no nome (celular e computador)', async () => {
-  for (const [largura, altura] of [[390, 844], [1280, 720]]) {
-    const { page, fechar } = await abrir({ largura, altura }); await entrar(page);
+test('a alça fica no alto, no meio, com toque folgado; o cabide e o nome ganham o toque, até um nome de 30 letras (celular e computador)', async () => {
+  // a 360 px um nome de 30 letras passaria do meio da tela
+  for (const [largura, altura, nome] of [[390, 844], [1280, 720], [360, 740, 'Maria Fernanda Souza dos Anjos']]) {
+    const { page, fechar } = await abrir({ largura, altura }); await entrar(page, nome && { nome });
     const confere = async onde => {
       const r = await page.evaluate(() => {
-        const a = document.querySelector('.alca').getBoundingClientRect();
-        const encosta = ['#marca', '#conta', '#cronometro'].filter(s => {
-          const e = document.querySelector(s), b = e && e.getBoundingClientRect();
-          return b && b.width && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-        });
+        const alca = document.querySelector('.alca'), a = alca.getBoundingClientRect(), puxador = getComputedStyle(alca, '::before');
+        const no = (x, y) => document.elementFromPoint(x, y);
+        const outros = ['#marca', '#conta', '#cronometro'].map(s => document.querySelector(s)).filter(e => e && e.getBoundingClientRect().width);
+        const encosta = outros.filter(e => { const b = e.getBoundingClientRect(); return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom; }).map(e => e.id);
+        // o toque no meio de cada um e logo depois da borda esquerda (onde um nome comprido cobre a alça) é dele
+        const tomados = outros.filter(e => { const b = e.getBoundingClientRect(); return [b.left + 4, b.left + b.width / 2].some(x => !e.contains(no(x, b.top + b.height / 2))); }).map(e => e.id);
+        // e o meio da alça, na área de toque e no puxador, é dela
+        const meio = a.left + a.width / 2, livre = [a.top + a.height / 2, a.top + parseFloat(puxador.marginTop) + parseFloat(puxador.height) / 2].every(y => no(meio, y) === alca);
         // touch-action none: no celular o dedo na alça arrasta a folha em vez de rolar a página
-        return { encosta, meio: Math.round(a.left + a.width / 2 - innerWidth / 2), topo: a.top, largura: a.width, altura: a.height, toque: getComputedStyle(document.querySelector('.alca')).touchAction };
+        return { encosta, tomados, livre, meio: Math.round(meio - innerWidth / 2), topo: a.top, largura: a.width, altura: a.height, toque: getComputedStyle(alca).touchAction };
       });
-      assert.ok(!r.encosta.length && Math.abs(r.meio) <= 1 && r.topo === 0 && r.largura >= 88 && r.altura >= 44 && r.toque === 'none', largura + ' ' + onde + ' ' + JSON.stringify(r));
+      assert.ok(!r.tomados.length && r.livre && Math.abs(r.meio) <= 1 && r.topo === 0 && r.largura >= 88 && r.altura >= 44 && r.toque === 'none', largura + ' ' + onde + ' ' + JSON.stringify(r));
+      if (!nome) assert.deepEqual(r.encosta, [], largura + ' ' + onde); // com um nome comum nada encosta na área da alça
     };
     await emEseu(page);
     await confere('é seu');

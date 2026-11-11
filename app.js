@@ -1024,17 +1024,19 @@ function trocar(passagem, fazer) {
 // O dedo leva a página inteira pelo <html>, com o topo e o que é fixo, e o que ela descobre fica preto (--arraste; estilo.css).
 // Largada além de 30% da altura, fecha (trocar a leva dali); antes disso, volta com a mola da pilha.
 const alca = document.querySelector('.alca');
-let dedo = null, arrastou = false; // a altura em que o dedo pegou a alça; se ele já andou: aí o clique que vem junto não conta
+// dedo: a altura que leva a folha; pousou: onde o dedo tocou; arrastou: o dedo andou mais de 10 px dali, e o clique que vem junto não conta
+let dedo = null, pousou = 0, arrastou = false;
 // fechar volta a quem abriu a folha: a peça da arara à arara; o resto ao início
 const fecharFolha = () => { location.hash = rotaAtual() === 'sua' && daArara(location.hash.split('/')[2]) ? '#/arara' : '#/'; };
 function soltarFolha() { dedo = null; document.body.classList.remove('arrastando-folha', 'folha-volta'); }
-alca.addEventListener('click', e => { if (!e.detail || !arrastou) fecharFolha(); }); // pelo teclado (detail 0), sempre
+// pelo teclado (detail 0), sempre; o toque que atravessou uma troca de tela (a alça já escondida) não fecha a tela nova
+alca.addEventListener('click', e => { if (!alca.hidden && (!e.detail || !arrastou)) fecharFolha(); });
 alca.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
   // pega a folha onde ela estiver, até no meio da volta
   const html = document.documentElement, y = parseFloat(getComputedStyle(html).getPropertyValue('--arraste')) || 0;
   html.style.setProperty('--arraste', y + 'px');
-  dedo = e.clientY - y; arrastou = false;
+  dedo = e.clientY - y; pousou = e.clientY; arrastou = false;
   alca.setPointerCapture(e.pointerId);
   document.body.classList.remove('folha-volta');
   document.body.classList.add('arrastando-folha');
@@ -1042,7 +1044,7 @@ alca.addEventListener('pointerdown', e => {
 alca.addEventListener('pointermove', e => {
   if (dedo === null) return;
   const dy = e.clientY - dedo;
-  if (Math.abs(dy) > 10) arrastou = true;
+  if (Math.abs(e.clientY - pousou) > 10) arrastou = true; // o caminho do dedo, não o da folha: pegar a folha na volta e soltar é toque
   document.documentElement.style.setProperty('--arraste', (dy < 0 ? dy / 4 : dy) + 'px'); // para cima, resiste
 });
 const largar = vale => () => {
