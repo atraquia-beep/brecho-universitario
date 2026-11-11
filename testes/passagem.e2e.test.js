@@ -241,6 +241,22 @@ test('marca da aba: barra que aparece já a encontra no lugar, sem varrer desde 
   await fechar();
 });
 
+test('a barra muda de cor junto com a passagem escuro → claro, sem saltar para a cor da tela nova (celular e computador)', async () => {
+  for (const [largura, altura] of [[390, 844], [1280, 720]]) {
+    const { page, fechar } = await comMovimento({ largura, altura });
+    // a cor da barra no quadro em que a passagem fica pronta, com a tela nova (Você, creme) já montada por baixo
+    await page.evaluate(() => {
+      const comecar = document.startViewTransition.bind(document);
+      document.startViewTransition = f => { const t = comecar(f); t.ready.then(() => { window.__barra = getComputedStyle(document.getElementById('abas')).backgroundColor; }); return t; };
+    });
+    await page.locator('#abas').getByRole('link', { name: 'Você' }).click();
+    assert.equal(await page.waitForFunction(() => window.__barra).then(h => h.jsonValue()), 'rgb(0, 0, 0)', largura + ' no começo');
+    await fimDaPassagem(page);
+    assert.equal(await page.locator('#abas').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(235, 224, 217)', largura + ' no fim');
+    await fechar();
+  }
+});
+
 // o #peca na primeira vez que aparece: o nome de view transition dele, a passagem em curso nessa hora, se o que vai por cima da foto espera ela pousar
 // e a opacidade da peça de baixo (outra roupa, que não pode aparecer em volta da foto que cresce)
 const pecaNaPassagem = page => page.waitForFunction(() => { const p = document.getElementById('peca'), q = document.querySelector('.proxima'); return p && [getComputedStyle(p).viewTransitionName, document.documentElement.dataset.passagem || '', document.body.classList.contains('pousando'), q && getComputedStyle(q).opacity]; }, null, { timeout: 2000 }).then(h => h.jsonValue());
