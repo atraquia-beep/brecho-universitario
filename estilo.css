@@ -302,7 +302,7 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   ::view-transition-new(abas) { animation-name: none; }
   ::view-transition-old(abas):only-child { opacity: 1; animation-name: barra-desce; }
   ::view-transition-new(abas):only-child { animation-name: barra-sobe; }
-  #abas::after { transition: transform .45s var(--expo), width .45s var(--expo), height .45s var(--expo); }
+  #abas.desliza::after { transition: transform .45s var(--expo), width .45s var(--expo), height .45s var(--expo); }
   .opcoes > * { animation: entrar .35s var(--expo) both; animation-delay: calc(var(--j, 0) * 30ms); }
   /* fora de uma passagem (a entrada, o fim do drop) a barra que volta também sobe; dentro dela, quem a move é a passagem */
   html:not([data-passagem]) body:not(.sem-abas) #abas { transition: transform .4s var(--expo); }

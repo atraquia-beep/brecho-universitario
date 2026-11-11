@@ -183,7 +183,10 @@ test('entrada desliza para a frente e mantém o foco no campo novo', async () =>
   await page.getByLabel('Seu e-mail da Unicamp').fill('d000000@dac.unicamp.br');
   await page.getByRole('button', { name: 'Receber o código' }).click();
   assert.equal(await sentido(page), 'ida');
-  await page.getByLabel('Dígito 1 de 4').waitFor(); await fimDaPassagem(page);
+  await page.getByLabel('Dígito 1 de 4').waitFor();
+  // dentro da passagem só a tela desliza: a chegada escalonada do painel não roda junto
+  assert.deepEqual(await page.evaluate(() => document.getAnimations().filter(a => a.animationName === 'entrar' && a.effect.target.closest('.painel')).length), 0);
+  await fimDaPassagem(page);
   assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'Dígito 1 de 4');
   await fechar();
 });
@@ -217,4 +220,20 @@ test('marca da aba acompanha a aba ativa, na barra de baixo e no computador', as
     await confere(largura + ' você');
     await fechar();
   }
+});
+
+test('marca da aba: barra que aparece já a encontra no lugar, sem varrer desde o canto', async () => {
+  const { page, fechar } = await comMovimento();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
+  await page.getByRole('button', { name: 'Fotografar' }).waitFor(); await fimDaPassagem(page);
+  await page.locator('#marca').click();
+  const h = await page.waitForFunction(() => {
+    const abas = document.getElementById('abas');
+    if (document.body.classList.contains('sem-abas') || !document.querySelector('.contagem')) return false;
+    const cs = getComputedStyle(abas), t = new DOMMatrix(getComputedStyle(abas, '::after').transform);
+    return { feito: Math.abs(t.m41 - parseFloat(cs.getPropertyValue('--aba-x'))) <= 1, x: t.m41, alvo: cs.getPropertyValue('--aba-x') };
+  });
+  const r = await h.jsonValue();
+  assert.ok(r.feito, JSON.stringify(r));
+  await fechar();
 });

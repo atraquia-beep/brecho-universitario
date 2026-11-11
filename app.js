@@ -282,7 +282,7 @@ function primeiraVez() {
     acesso = passo;
     trocar('ida', () => {
       desenhar();
-      document.querySelector('#tela .painel').classList.add('chega');
+      if (!passagemAnima()) document.querySelector('#tela .painel').classList.add('chega'); // a passagem já é o movimento da tela nova
       document.querySelector(foco).focus();
     });
   };
@@ -913,8 +913,12 @@ let ultimaVista = null; // a entrada animada só toca quando a vista muda (rota,
 function marcarAba() {
   const abas = document.getElementById('abas'), span = abas.querySelector('[aria-current="page"] span');
   const props = ['--aba-x', '--aba-y', '--aba-w', '--aba-h'];
-  if (!span || !span.offsetWidth) { props.forEach(p => abas.style.removeProperty(p)); return; } // sem aba ativa ou barra escondida
+  if (!span || !span.offsetWidth) { delete abas.dataset.aba; props.forEach(p => abas.style.removeProperty(p)); return; } // sem aba ativa ou barra escondida
   const c = abas.getBoundingClientRect(), r = span.getBoundingClientRect();
+  // só desliza quando a aba muda com a barra já posta; a primeira posição (barra que acaba de aparecer) e os ajustes de tamanho são na hora
+  const href = span.parentNode.getAttribute('href');
+  abas.classList.toggle('desliza', abas.style.getPropertyValue('--aba-x') !== '' && abas.dataset.aba !== href);
+  abas.dataset.aba = href;
   [r.left - c.left, r.top - c.top + r.height * .62, r.width, r.height * .38].forEach((v, i) => abas.style.setProperty(props[i], v + 'px'));
 }
 if (document.fonts) document.fonts.ready.then(() => marcarAba());
