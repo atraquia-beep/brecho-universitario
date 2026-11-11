@@ -77,9 +77,17 @@ test('toque no meio da passagem termina na tela certa', async () => {
   // a passagem pulada não apaga a marca da que começou depois dela
   await page.waitForFunction(() => document.documentElement.dataset.passagem === 'volta', null, { timeout: 2000 });
   await naEspera();
-  // com toques de verdade, um logo depois do outro
-  await verPecas(page).click(); await page.locator('#marca').click();
-  await naEspera();
+  // um toque de verdade no meio da passagem não chega ao cabide: enquanto ela corre, quem recebe o toque é o <html>.
+  // A passagem segue até a arara e as telas não se misturam
+  await verPecas(page).click();
+  assert.equal(await sentido(page), 'ida');
+  await page.evaluate(() => document.addEventListener('click', e => { window.__toque = [e.target.localName, document.documentElement.dataset.passagem || '']; }, { once: true }));
+  const m = await page.locator('#marca').boundingBox();
+  await page.mouse.click(m.x + m.width / 2, m.y + m.height / 2);
+  assert.deepEqual(await page.evaluate(() => window.__toque), ['html', 'ida']);
+  await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  assert.deepEqual(await page.evaluate(() => [location.hash, ...['#drop', '.contagem', '#tela'].map(s => document.querySelectorAll(s).length), document.documentElement.dataset.passagem || '']),
+    ['#/arara', 1, 0, 1, '']);
   await fechar();
 });
 
@@ -195,7 +203,7 @@ async function naEntrada(opcoes) {
   return aberto;
 }
 
-test('entrada desliza para a frente e mantém o foco no campo novo', async () => {
+test('entrada desliza para a frente ("trocar o e-mail", para trás) e mantém o foco no campo novo', async () => {
   const { page, fechar } = await naEntrada();
   await page.getByLabel('Seu e-mail da Unicamp').fill('d000000@dac.unicamp.br');
   await page.getByRole('button', { name: 'Receber o código' }).click();
@@ -205,6 +213,10 @@ test('entrada desliza para a frente e mantém o foco no campo novo', async () =>
   assert.deepEqual(await page.evaluate(() => document.getAnimations().filter(a => a.animationName === 'entrar' && a.effect.target.closest('.painel')).length), 0);
   await fimDaPassagem(page);
   assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'Dígito 1 de 4');
+  await page.getByRole('button', { name: 'trocar o e-mail' }).click();
+  assert.equal(await sentido(page), 'volta');
+  await fimDaPassagem(page);
+  assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'Seu e-mail da Unicamp');
   await fechar();
 });
 

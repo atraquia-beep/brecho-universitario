@@ -47,8 +47,8 @@ body {
 .alca::before { content: ""; display: block; width: 36px; height: 5px; margin: 8px auto 0; border-radius: 3px; background: currentColor; opacity: .35; }
 /* o nome ganha da alça: o cabide e o nome ficam por cima dela (mesmo z, depois no HTML; o fantasma, que vem depois deles, segue por cima),
    e um nome comprido para antes do meio, com reticências, para o meio da alça ficar livre */
-.alca:not([hidden]) + .topo > a { position: relative; z-index: 3; }
-.alca:not([hidden]) + .topo > #conta { max-width: calc(50% - 30px); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.alca:not([hidden]) ~ .topo > a { position: relative; z-index: 3; }
+.alca:not([hidden]) ~ .topo > #conta { max-width: calc(50% - 30px); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 /* A folha arrastada: a página inteira desce --arraste pelo <html> (o topo e o que é fixo, como o visor no computador, vão junto);
    o que ela descobre fica preto, a cor dela vai até as bordas da janela e os cantos de cima arredondam como na 'desce'. */
 @property --arraste { syntax: "<length>"; inherits: true; initial-value: 0px; }

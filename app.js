@@ -276,11 +276,11 @@ function primeiraVez() {
   const aviso = frase('');
   aviso.hidden = true;
   const dizer = texto => { aviso.textContent = texto; aviso.hidden = false; };
-  // troca de passo: redesenha, faz o painel chegar e leva o foco ao primeiro campo
-  const ir = (passo, foco) => {
+  // troca de passo: redesenha, faz o painel chegar e leva o foco ao primeiro campo; "trocar o e-mail" é um passo para trás
+  const ir = (passo, foco, sentido = 'ida') => {
     clearTimeout(acessoTimer); acessoTimer = null;
     acesso = passo;
-    trocar('ida', () => {
+    trocar(sentido, () => {
       desenhar();
       if (!passagemAnima()) document.querySelector('#tela .painel').classList.add('chega'); // a passagem já é o movimento da tela nova
       document.querySelector(foco).focus();
@@ -309,7 +309,7 @@ function primeiraVez() {
       apoio('Sem senha. Mando um código de quatro dígitos para esse e-mail.'),
     ];
   } else if (acesso === 'codigo') {
-    const nota = apoio('Demonstração: nenhum e-mail sai daqui e qualquer código entra. ', botaoPalavra('trocar o e-mail', () => ir('email', '.campo')), '.');
+    const nota = apoio('Demonstração: nenhum e-mail sai daqui e qualquer código entra. ', botaoPalavra('trocar o e-mail', () => ir('email', '.campo', 'volta')), '.');
     const conferir = grupo => {
       if (acessoTimer) return;
       const seguir = () => ir('perfil', 'input[aria-label="Seu nome"]');
