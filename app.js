@@ -1012,6 +1012,7 @@ function trocar(passagem, fazer) {
   const feito = () => { soltarFolha(); fazer(); };
   if (!passagem || !passagemAnima()) { feito(); soltarFoto(); html.style.removeProperty('--arraste'); return; }
   if (transicao) transicao.skipTransition(); // um toque no meio: a passagem de antes acaba na hora e a nova parte dali
+  document.querySelectorAll('.camada-fantasma').forEach(c => c.remove()); // a passagem já responde ao toque
   html.dataset.passagem = passagem;
   const t = transicao = document.startViewTransition(feito);
   t.ready.catch(() => {}); // a passagem pulada rejeita o ready; não é erro

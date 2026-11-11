@@ -174,6 +174,20 @@ test('É minha: com passagem, a folha que sobe é o retorno e só o passar solta
   }
 });
 
+test('"passo" e logo "É minha": a passagem tira o fantasma que ainda voa, e ele não fica congelado sobre a folha', async () => {
+  const { page, fechar } = await naArara();
+  // quantas camadas de fantasma existem quando a passagem é marcada, antes da foto da tela antiga
+  await page.evaluate(() => new MutationObserver(() => { if (document.documentElement.dataset.passagem) window.__camadas = document.querySelectorAll('.camada-fantasma').length; })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-passagem'] }));
+  // os dois toques na mesma tarefa: o fantasma do "passo" (180 ms) ainda voa quando "É minha" abre a passagem
+  const voando = await page.evaluate(() => { document.getElementById('passo').click(); const n = document.querySelectorAll('.camada-fantasma').length; document.querySelector('.acoes .principal').click(); return n; });
+  assert.equal(voando, 1);
+  assert.equal(await sentido(page), 'sobe');
+  assert.equal(await page.evaluate(() => window.__camadas), 0);
+  await page.locator('.codigo').waitFor(); await fimDaPassagem(page);
+  await fechar();
+});
+
 // sem perfil: só a abertura sai e a entrada fica no e-mail
 async function naEntrada(opcoes) {
   const aberto = await abrir({ movimento: 'no-preference', ...opcoes });
