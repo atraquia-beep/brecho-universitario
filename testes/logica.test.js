@@ -46,3 +46,21 @@ test('sugerirPreco', () => {
   assert.ok(L.sugerirPreco('jaqueta jeans', 'novo com etiqueta').sugerido > 35 && L.sugerirPreco('jaqueta jeans', 'usado').sugerido < 35);
   for (const t of Object.keys(D.TIPOS)) for (const e of D.ESTADOS) { const s = L.sugerirPreco(t, e); assert.ok(s.min >= 5 && s.min < s.max && s.min <= s.sugerido && s.sugerido <= s.max && [s.min, s.max, s.sugerido].every(v => v % 5 === 0), t + ' ' + e); }
 });
+test('passagem: lugares deslizam de lado, folhas sobem e descem', () => {
+  const p = L.passagem;
+  assert.equal(p('', 'arara'), 'ida');
+  assert.equal(p('arara', ''), 'volta');
+  assert.equal(p('', 'voce'), 'ida');
+  assert.equal(p('voce', ''), 'volta');
+  assert.equal(p('arara', 'voce'), 'ida');
+  assert.equal(p('', 'sua'), 'sobe');
+  assert.equal(p('arara', 'sua'), 'sobe');
+  assert.equal(p('voce', 'sua'), 'sobe');
+  assert.equal(p('', 'vender'), 'sobe');
+  assert.equal(p('sua', 'arara'), 'desce');
+  assert.equal(p('sua', ''), 'desce');
+  assert.equal(p('vender', ''), 'desce');
+  assert.equal(p('vender', 'voce'), 'desce');
+  assert.equal(p('arara', 'arara'), null);
+  assert.equal(p('sua', 'sua'), null);
+});

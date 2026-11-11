@@ -21,6 +21,16 @@ Logica.extenso = (n, genero) => {
 
 Logica.dinheiro = valor => 'R$ ' + (Number.isInteger(valor) ? String(valor) : valor.toFixed(2).replace('.', ','));
 
+// Folhas (sua, vender) sobem e descem; as demais telas deslizam de lado.
+const FOLHAS = ['sua', 'vender'];
+Logica.passagem = (de, para) => {
+  if (de === para) return null;
+  if (FOLHAS.includes(para)) return 'sobe';
+  if (FOLHAS.includes(de)) return 'desce';
+  if (para === '') return 'volta';
+  return 'ida';
+};
+
 Logica.entenderPedido = (texto, perfil) => {
   const t = semAcento(texto);
   const nomes = Object.keys(D.TIPOS);
