@@ -59,7 +59,7 @@ async function entrar(page, perfil = {}) {
   await botao(/^Teto:/).click(); await opcao(p.teto === null ? 'sem teto' : 'até ' + Logica.dinheiro(p.teto)).click();
   await botao(/^Curso:/).click(); await opcao(p.curso).click();
   await botao('Entrar').click();
-  await page.locator('#conta').filter({ hasText: 'em créditos' }).waitFor();
+  await page.locator('#conta').filter({ hasText: p.nome }).waitFor();
 }
 
 const salvo = page => page.evaluate(() => JSON.parse(localStorage['brecho.v2']));

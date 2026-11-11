@@ -13,6 +13,8 @@ html { overscroll-behavior-y: none; }
   --expo: cubic-bezier(.19, 1, .22, 1); --io: cubic-bezier(.87, 0, .13, 1);
   /* largura útil da coluna do celular: os títulos gigantes são calculados para caber nela de ponta a ponta */
   --coluna: calc(100vw - 48px);
+  /* altura da barra de baixo, mais a área segura do iPhone */
+  --abas: calc(56px + env(safe-area-inset-bottom));
 }
 @media (min-width: 430px) { :root { --coluna: 382px; } }
 /* --realce-escuro vem do app.js: a cor escolhida a 40% */
@@ -27,12 +29,16 @@ body {
 }
 :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 /* toques seguidos ("passo", "passo"…) não dão zoom no iPhone */
-.palavra, .principal, #disparo, .topo a { touch-action: manipulation; }
+.palavra, .principal, #disparo, .topo a, #abas a { touch-action: manipulation; }
 
 .topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 #marca { color: var(--tinta); display: block; }
 #marca svg { width: 36px; height: 28px; display: block; }
-#conta { margin-left: auto; font-size: 13px; font-weight: 400; line-height: 1.45; letter-spacing: 0; color: var(--apoio); text-decoration: none; }
+/* área de toque de 44 × 44 px; as margens negativas devolvem o enchimento e o topo não cresce */
+#conta {
+  min-width: 44px; margin: -13px 0 -13px auto; padding: 13px 0;
+  font-size: 13px; font-weight: 400; line-height: 1.45; letter-spacing: 0; text-align: right; color: var(--apoio); text-decoration: none;
+}
 /* a arara a um toque, no canto de cima; sai na câmera e nas telas de foto (o drop e a própria arara) */
 #ir-arara {
   margin-left: 14px; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px;
@@ -45,6 +51,21 @@ body {
 }
 #ir-arara span:empty, body.ao-vivo #ir-arara { display: none; }
 #tela { flex: 1; display: flex; flex-direction: column; }
+
+/* Barra de baixo: Comprar, Vender e Você, na luz da tela.
+   Some pela classe sem-abas no body e o nó fica: assim a barra pode sair e voltar com movimento. */
+#abas {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; max-width: 430px; margin: 0 auto;
+  display: flex; height: var(--abas); padding-bottom: env(safe-area-inset-bottom);
+  background: var(--fundo); border-top: 1px solid var(--traco);
+}
+#abas a { flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--apoio); text-decoration: none; }
+#abas [aria-current="page"] { color: var(--tinta); }
+#abas [aria-current="page"] span { font-weight: 700; background: linear-gradient(transparent 62%, var(--realce) 62%); }
+body.sem-abas #abas { display: none; }
+/* o fim da tela e a folha da arara ficam acima da barra */
+body:not(.sem-abas) { padding-bottom: calc(22px + var(--abas)); }
+body:not(.sem-abas) #drop { bottom: var(--abas); }
 
 p { margin: 0 0 16px; }
 .frase { margin: 0 0 16px; }
@@ -274,6 +295,15 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   .pe { grid-column: 1; grid-row: 2; }
   .painel { grid-column: 2; grid-row: 1 / 3; position: relative; }
   .fecho { font-size: 44px; }
+
+  /* Barra: só as palavras, a partir da coluna da direita; a faixa vazia deixa o toque passar para o que está embaixo */
+  #abas { max-width: 1440px; padding-left: calc(96px + var(--coluna)); gap: 40px; background: none; border-top: 0; pointer-events: none; }
+  #abas a { flex: none; min-width: 44px; font-size: 17px; pointer-events: auto; }
+  body:not(.sem-abas) { padding-bottom: calc(30px + var(--abas)); }
+  /* na arara a foto volta à altura toda; a folha guarda embaixo o lugar da barra, e as palavras começam junto com o texto dela */
+  body:not(.sem-abas) #drop { bottom: 0; }
+  body:not(.sem-abas) .folha { padding-bottom: calc(34px + var(--abas)); }
+  body.ao-vivo #abas { max-width: none; padding-left: calc(55% + 48px); }
 
   /* Entrada: palco preto, painel creme até a borda da janela (a sombra não cria rolagem; o recorte a segura no meio do vão) */
   body.entrada .painel {

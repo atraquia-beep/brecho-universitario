@@ -42,7 +42,7 @@ test('entrada: e-mail da Unicamp, código de quatro dígitos, perfil', async () 
   assert.equal(await page.getByLabel('Seu nome').inputValue(), 'Deco'); // trocar uma palavra não apaga o que foi digitado
   await page.getByRole('button', { name: 'Entrar' }).click();
   await page.getByText('Próximo drop · quarta, 20h').waitFor();
-  assert.match(await page.locator('#conta').innerText(), /^Deco · R\$\s0 em créditos$/);
+  assert.equal(await page.locator('#conta').innerText(), 'Deco');
   assert.deepEqual(await page.evaluate(() => ['escuro', 'entrada'].map(c => document.body.classList.contains(c))), [true, false]);
   assert.deepEqual((await salvo(page)).perfil, { nome: 'Deco', tamanho: 'G', pegadas: ['vintage', 'street'], teto: null, curso: 'Nutrição', email: 'd000000@dac.unicamp.br' });
   await page.reload(); await page.getByText('Próximo drop · quarta, 20h').waitFor();
@@ -95,7 +95,7 @@ test('nome com marcação aparece como texto', async () => {
   const { page, fechar } = await abrir();
   await entrar(page, { nome: '<b>Deco</b>' });
   assert.equal(await page.locator('#tela b, #conta b').count(), 0);
-  assert.match(await page.locator('#conta').innerText(), /^<b>Deco<\/b> · /);
+  assert.equal(await page.locator('#conta').innerText(), '<b>Deco</b>');
   await fechar();
 });
 test('teclado: Escape fecha a lista e o foco volta; escolher devolve o foco; Enter entra', async () => {

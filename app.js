@@ -29,7 +29,7 @@ function aplicarRealce() {
 function atualizarConta() {
   const conta = document.getElementById('conta'), arara = document.getElementById('ir-arara');
   conta.hidden = arara.hidden = !estado.perfil || !!venda; // em #/vender o cronômetro ocupa o lugar
-  conta.textContent = estado.perfil ? estado.perfil.nome + ' · ' + Logica.dinheiro(estado.creditos) + ' em créditos' : '';
+  conta.textContent = estado.perfil ? estado.perfil.nome : '';
   // o número da arara acompanha as reservas: toda mudança de estado passa por aqui (guardar)
   const n = estado.perfil ? pilhaDaArara(true).length : 0;
   arara.lastChild.textContent = n || '';
@@ -909,6 +909,10 @@ function desenhar() {
   if (nos === false) { location.replace('#/'); return; }
   document.body.classList.toggle('escuro', !!rota.escura);
   barra();
+  // a barra de baixo some onde o drop ao vivo, a câmera ou a reserva ocupam a tela, e na entrada; na arara, Comprar fica ativo
+  document.body.classList.toggle('sem-abas', !(estado.perfil && (rota === rotas.arara || rota === rotas.voce || (rota === rotas[''] && ultimaTela !== 'no-ar'))));
+  const aba = rota === rotas.voce ? '#/voce' : '#/';
+  document.querySelectorAll('#abas a').forEach(a => { if (a.getAttribute('href') === aba) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   // a peça em tela cheia (drop ou arara) põe o topo claro sobre a foto
   document.body.classList.toggle('ao-vivo', nos.some(n => n.id === 'drop'));
   document.body.classList.toggle('vendendo', rota === rotas.vender);

@@ -86,7 +86,7 @@ test('sua peça é levada no drop e o crédito cobre a próxima peça', async ()
   await passar(4800); assert.equal((await salvo(page)).creditos, 0);
   await passar(200);
   await page.getByText(/A Bia, de Nutrição, levou sua jaqueta jeans\. Entraram R\$\s35 em créditos\./).waitFor();
-  assert.match(await page.locator('#conta').innerText(), /R\$\s35 em créditos/);
+  assert.equal((await salvo(page)).creditos, 35);
   await page.getByRole('button', { name: 'passo' }).click();
   await page.getByText(/· sai de graça com seus créditos/).waitFor();                       // camisa xadrez, R$ 25
   await page.reload(); await page.locator('#drop').waitFor();
@@ -100,12 +100,12 @@ test('crédito parcial, crédito total e Pix', async () => {
   await a.page.getByRole('button', { name: 'passo' }).click(); await a.page.getByRole('button', { name: 'passo' }).click(); // moletom preto, R$ 40
   await a.page.getByRole('button', { name: 'É minha' }).click();
   await a.page.getByText(/Seus R\$\s35 em créditos já entraram\. Faltam R\$\s5, pagos na hora\./).waitFor();
-  assert.match(await a.page.locator('#conta').innerText(), /R\$\s0 em créditos/);
+  assert.equal((await salvo(a.page)).creditos, 0);
   await a.page.getByRole('button', { name: 'Cancelar a reserva' }).click(); await a.page.locator('#drop').waitFor();
   await a.page.getByRole('button', { name: 'passo' }).click(); await a.page.getByRole('button', { name: 'passo' }).click(); // camiseta azul, R$ 15
   await a.page.getByRole('button', { name: 'É minha' }).click();
   await a.page.getByText('Seus créditos pagaram tudo.').waitFor();
-  assert.match(await a.page.locator('#conta').innerText(), /R\$\s20 em créditos/);
+  assert.equal((await salvo(a.page)).creditos, 20);
   await a.fechar();
   a = await abrir(); await entrar(a.page);
   await ateOPalpite(a.page, a.passar);
@@ -113,7 +113,7 @@ test('crédito parcial, crédito total e Pix', async () => {
   await a.page.getByRole('button', { name: 'Anunciar no drop' }).click(); await a.page.getByRole('button', { name: 'Voltar' }).click();
   await aoVivo(a.page, a.passar); await a.passar(5000);
   await a.page.getByText(/A Bia, de Nutrição, levou sua jaqueta jeans\. O Pix de R\$\s31,50 cai depois da retirada\./).waitFor();
-  assert.match(await a.page.locator('#conta').innerText(), /R\$\s0 em créditos/);
+  assert.equal((await salvo(a.page)).creditos, 0);
   await a.fechar();
 });
 test('anúncio feito durante o drop espera o próximo', async () => {
