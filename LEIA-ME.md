@@ -16,33 +16,28 @@ Protótipo do brechó digital universitário para o vídeo do MVP de MG900 – E
 - Abra o link uma vez com internet, para as fotos e a fonte ficarem carregadas.
 - A abertura ("TAKE IT" subindo sobre as fotos, com o contador até 100) roda sozinha por uns 4 segundos toda vez que a página é aberta ou recarregada. Um toque pula. Para a tomada começar por ela, recarregue a página com a gravação já rodando.
 - Se o celular estiver com **Reduzir movimento** ligado (Acessibilidade), o app não mostra a abertura, a cortina "AO VIVO" nem as entradas animadas. Desligue para gravar.
-- Abra **vender uma peça para este drop** uma vez e permita a câmera: assim a pergunta de permissão não cai dentro da tomada cronometrada.
+- Abra a aba **Vender** uma vez e permita a câmera: assim a pergunta de permissão não cai dentro da tomada cronometrada.
 - Faça uma tomada de ensaio inteira e depois, em **Você**, **Recomeçar do zero**.
 - Os dias citados no roteiro ("quarta", "terça") são os de uma gravação numa terça; em outros dias eles mudam. Quando o próximo drop está a dois dias ou mais, a espera mostra os dias em vez do relógio correndo: gravando no domingo, na segunda, na terça ou na quarta (antes das 20h), o relógio corre.
-- Numa tela baixa, a espera pode precisar de uma pequena rolagem.
 - No computador, uma janela de 1280 × 720 mostra todas as telas do roteiro sem rolar. No drop e na arara, a seta para a esquerda passa a peça e a seta para a direita pega.
 
 ## Roteiro de gravação sugerido
 
-É o mesmo roteiro do teste `testes/roteiro.e2e.test.js`, na mesma ordem. Anote o pedido do blazer **antes** de vender: assim a jaqueta do catálogo não aparece na hora em que a Bia leva a sua.
+É o mesmo roteiro do teste `testes/roteiro.e2e.test.js`, na mesma ordem. A arara entra logo no começo: assim a história mostra primeiro o que dá para comprar já e depois o drop.
 
 1. A abertura passa sozinha e cai na capa preta, com "TAKE IT" de ponta a ponta. A entrada tem três passos. **E-mail**: escreva um e-mail `@dac.unicamp.br` e toque em **Receber o código**. **Código**: digite quatro dígitos quaisquer; as células giram, se juntam e viram o visto. **Você**: preencha a frase (nome Deco, tamanho M, vintage e street, até R$ 40, Administração) e toque em **Entrar**.
-2. A espera mostra a contagem e "Deco, catorze peças entram juntas. Cinco são M, na sua pegada." No canto de cima, à direita, fica o botão **Arara**, com o número de peças.
-3. No campo de baixo, escreva "um blazer para a entrevista de quinta" e envie. Aparece "Anotado: …".
-4. Toque em **vender uma peça para este drop**. O app abre na câmera e o cronômetro corre no topo.
-5. Aponte a câmera para uma jaqueta jeans (o primeiro palpite é sempre "jaqueta jeans, pouco uso") e toque no botão redondo para fotografar. Com foto de verdade, o palpite muda a cada anúncio novo, a não ser que você recomece do zero; a peça de exemplo sempre ganha o palpite da jaqueta. Depois de "Olhando…", o app sugere tipo, tamanho, estado e preço; toque em **Anunciar no drop**.
-6. Aparece "No drop em N segundos. Sua jaqueta jeans entra quarta, às 20h." Toque em **Voltar**.
-7. Toque em **ensaiar o drop agora**. Em 10 segundos a cortina "AO VIVO" passa na cor do brechó e o drop entra no ar.
-8. A primeira peça é o blazer preto, com "Você pediu: um blazer para a entrevista de quinta".
-9. Espere uns 5 segundos: aparece "A Bia, de Nutrição, levou sua jaqueta jeans. Entraram R$ 35 em créditos."
-10. Toque em **É minha** (ou arraste a foto para a direita). A tela "É seu" mostra a retirada, o código e "Seus R$ 35 em créditos já entraram. Faltam R$ 3, pagos na hora."
-11. Toque em **Voltar ao drop**. O drop acaba quando os 10 minutos passam ou quando a pilha esvazia. Os outros alunos levam uma peça a cada 8 segundos, então a pilha também se esvazia sozinha em cerca de 1 min 45 s. Para a gravação, o jeito rápido é passar as peças que restam (**passo**, ou arrastar para a esquerda) até aparecer "O drop acabou. Você ficou com uma peça." Toque em **Voltar**.
-12. Na espera, toque em "Seu blazer preto espera você terça…", depois em **Já retirei** e em **ótimo**: "Obrigado. Uma peça a menos no lixo: Administração chegou a 129."
-13. Toque em "Deco · R$ 0 em créditos" no topo. A área **Você** mostra a jaqueta vendida em créditos, a reserva retirada e "Seu último anúncio levou N s.". Dá para trocar a cor do brechó aqui (vermelho, verde, rosa, azul ou amarelo): ela muda a abertura, a cortina, o carimbo "É MINHA" e o toque dos botões.
+2. O início mostra primeiro "À venda agora": as peças da arara numa fileira e o botão **Ver as 5 peças**. Embaixo, a contagem do drop e a frase "Catorze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Sete são M." No topo fica só o nome ("Deco") e, embaixo, a barra **Comprar · Vender · Você**.
+3. Toque em **Me avise antes**: aparece "Combinado. Te aviso cinco minutos antes."
+4. Toque em **Ver as 5 peças**. A arara abre na jaqueta bomber. Passe a peça (**passo**, ou arraste para a esquerda): vem o suéter azul-marinho. Toque em **É minha** (ou arraste para a direita). A tela "É seu" mostra "O suéter azul-marinho da Helena espera você terça, das 12h às 13h, no ponto da FCA", o código e "Você paga R$ 30 na hora, em Pix ou dinheiro."
+5. Toque em **continuar na arara** e, na barra, em **Comprar**. O início agora mostra "Ver as 4 peças" e o aviso "Seu suéter azul-marinho: retirada terça, 12h–13h. Código XXXX."
+6. Na barra, toque em **Vender**. O app abre na câmera e o cronômetro corre no topo. Aponte a câmera para uma jaqueta jeans (o primeiro palpite é sempre "jaqueta jeans, pouco uso") e toque no botão redondo para fotografar. Com foto de verdade, o palpite muda a cada anúncio novo, a não ser que você recomece do zero; a peça de exemplo sempre ganha o palpite da jaqueta. Depois de "Olhando…", o app sugere tipo, tamanho, estado e preço; toque em **Anunciar no drop**. Aparece "No drop em N segundos. Sua jaqueta jeans entra quarta, às 20h." Toque em **Voltar**.
+7. Toque em **ver um drop de teste agora (10 s)**. Em 10 segundos a cortina "AO VIVO" passa na cor do brechó e o drop entra no ar. A primeira peça é a jaqueta jeans do catálogo: passe-a (**passo**) e a camisa xadrez aparece. Espere uns 5 segundos: aparece "A Bia, de Nutrição, levou sua jaqueta jeans. Entraram R$ 35 em créditos."
+8. Toque em **É minha** (ou arraste a foto para a direita). A tela "É sua" mostra a retirada, o código e "Seus créditos pagaram tudo."
+9. Toque em **Voltar ao drop**. O drop acaba quando os 10 minutos passam ou quando a pilha esvazia. Os outros alunos levam uma peça a cada 8 segundos, então a pilha também se esvazia sozinha em cerca de 1 min 45 s. Para a gravação, o jeito rápido é passar as peças que restam (**passo**, ou arrastar para a esquerda) até aparecer "O drop acabou. Você ficou com uma peça." Toque em **Voltar**.
+10. No início, toque no aviso "Sua camisa xadrez: retirada terça, 12h–13h. Código XXXX.", depois em **Já retirei** e em **ótimo**: "Obrigado. Uma peça a menos no lixo: Administração chegou a 129." Toque em **Voltar**.
+11. Na barra, toque em **Você**. A área mostra a jaqueta vendida em créditos, "Você tem R$ 10 em créditos.", as duas reservas (a camisa já retirada e o suéter à espera) e "Seu último anúncio levou 19 s.". Dá para trocar a cor do brechó aqui (vermelho, verde, rosa, azul ou amarelo): ela muda a abertura, a cortina, o carimbo "É MINHA" e o toque dos botões.
 
-### Mostrar a arara (opcional)
-
-A arara é a loja aberta o tempo todo: cinco peças próprias, uma por vez, como no drop, mas sem relógio e sem ninguém levando nada. Toque em **Arara**, no canto de cima à direita. Passe a primeira peça (**passo** ou arraste para a esquerda) e pegue a segunda (**É minha**): a tela "É seu" mostra a retirada e o código, como no drop. **continuar na arara** volta para as peças que faltam. Quem passa a arara inteira vê "Você viu a arara inteira." e pode **olhar de novo**. Faça isso antes do passo 7 ou depois do passo 12. Durante o drop, na câmera e dentro da própria arara o botão sai do topo, para a atenção ficar na peça.
+A arara é a loja aberta o tempo todo: cinco peças próprias, uma por vez, como no drop, mas sem relógio e sem ninguém levando nada. Quem passa a arara inteira vê "Você viu a arara inteira." e pode **olhar de novo**. Durante o drop, na câmera e em "É seu" a barra some, para a atenção ficar na peça.
 
 ## Como regravar
 
@@ -54,7 +49,7 @@ Em **Você**, toque em **Recomeçar do zero** e depois em **sim**. Tudo é apaga
 2. Em `dados.js`, na linha da peça dentro de `CATALOGO`, troque `foto: 'fotos/...'` pelo nome do arquivo e atualize `alt` com uma descrição curta da foto.
 3. Ponha a linha da foto (arquivo e origem) em `fotos/CREDITOS.md`. Os testes conferem o tamanho e o crédito.
 
-Os nomes de vendedores, cursos, notas e números do app são exemplos. Todos ficam em `dados.js` (`CATALOGO`, `ARARA`, `COMPRADOR`, `CONTADOR_BASE`, `DROP.online`, `DROP.esperando`). As fotos da arara seguem as mesmas regras.
+Os nomes de vendedores, cursos, notas e números do app são exemplos. Todos ficam em `dados.js` (`CATALOGO`, `ARARA`, `COMPRADOR`, `CONTADOR_BASE`, `DROP.online`). As fotos da arara seguem as mesmas regras.
 
 ## Como trocar o nome
 
@@ -72,18 +67,17 @@ O visual segue o template Velvet (loja de roupas) do acervo de templates: creme 
 
 | Parece | É |
 |---|---|
-| Drop com o campus inteiro | Cada aparelho roda o seu. "23 online" e "38 esperando" são números fixos |
+| Drop com o campus inteiro | Cada aparelho roda o seu. "23 online" é um número fixo |
 | Outros alunos levando peças | Uma peça do fim da pilha sai a cada 8 segundos |
 | Reconhecer a foto | Palpite roteirizado (o primeiro é jaqueta jeans, pouco uso), sempre editável |
-| Entender o pedido | Busca por palavras-chave sobre o catálogo de exemplo |
 | Outro aluno comprando a sua peça | Evento fixo 5 segundos depois de o drop começar |
-| Acordar antes do drop | Só guarda a escolha |
+| Me avise antes | Só guarda a escolha |
 | Código por e-mail | Nenhum e-mail é enviado e qualquer código de quatro dígitos entra (a tela do código avisa). O e-mail só passa pela checagem do final do endereço |
 | Catálogo | 14 peças de exemplo no drop e 5 na arara, com vendedores fictícios |
 
 ## A regra do drop e a arara
 
-As peças novas entram todas juntas, segunda e quarta, às 20h, por 10 minutos. No drop aparece uma peça por vez: quem tocar primeiro leva. O ensaio abre um drop de verdade 10 segundos depois do toque.
+As peças novas entram todas juntas, segunda e quarta, às 20h, por 10 minutos. No drop aparece uma peça por vez: quem tocar primeiro leva. O drop de teste abre um drop de verdade 10 segundos depois do toque.
 
 A arara fica aberta o tempo todo, com as peças de `ARARA` em `dados.js` (mesmo formato do `CATALOGO`). Uma peça passada sai só desta visita; uma peça pega vira reserva e sai de vez.
 
@@ -92,7 +86,7 @@ Para mudar dias e horário, edite `DROP` em `dados.js`:
 - `dias`: dias da semana, de 0 (domingo) a 6 (sábado), com pelo menos um dia. `[1, 3]` é segunda e quarta.
 - `hora`: hora de início, no relógio do aparelho (`20` é 20h).
 - `duracaoMs`: duração em milissegundos (`600000` são 10 minutos).
-- `ensaioMs`: quanto o ensaio espera antes de abrir (`10000` são 10 segundos).
+- `ensaioMs`: quanto o drop de teste espera antes de abrir (`10000` são 10 segundos).
 
 ## Como rodar os testes
 
