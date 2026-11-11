@@ -455,7 +455,7 @@ test('arrastar pouco devolve a folha com a mola e não muda nada; o clique que s
   await fechar();
 });
 
-test('alça tocada fecha como o Voltar: É seu da arara volta à arara, Vender volta ao início', async () => {
+test('alça tocada fecha para a tela que abriu a folha: É seu e Vender abertas na arara voltam à arara, Vender aberta no início volta ao início', async () => {
   const { page, fechar } = await comMovimento();
   assert.equal(await page.locator('.alca').isVisible(), false); // só as folhas têm alça
   await emEseu(page);
@@ -464,6 +464,13 @@ test('alça tocada fecha como o Voltar: É seu da arara volta à arara, Vender v
   await page.locator('#drop').waitFor(); await fimDaPassagem(page);
   assert.equal(await page.evaluate(() => location.hash), '#/arara');
   assert.equal(await page.locator('.alca').isVisible(), false);
+  // a Vender aberta pela barra da arara
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor(); await fimDaPassagem(page);
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  assert.equal(await sentido(page), 'desce');
+  await fimDaPassagem(page);
+  assert.equal(await page.evaluate(() => location.hash), '#/arara');
+  await page.locator('#drop').waitFor();
   await page.locator('#marca').click(); await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
   await page.locator('#abas').getByRole('link', { name: 'Vender' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor(); await fimDaPassagem(page);
   await page.getByRole('button', { name: 'Fechar' }).click();
@@ -486,6 +493,15 @@ test('a alça pelo teclado fecha para o mesmo destino, até logo depois de um ar
   await page.locator('.alca').focus(); await page.keyboard.press('Space');
   await page.locator('.contagem').waitFor({ timeout: 5000 });
   assert.equal(await page.evaluate(() => location.hash), '#/');
+  await fechar();
+});
+
+test('folha aberta direto pelo endereço fecha pela regra de sempre: a peça da arara volta à arara', async () => {
+  const { page, fechar } = await abrir(); await entrar(page);
+  await emEseu(page);
+  await page.reload(); await page.locator('.codigo').waitFor(); // aberta pelo endereço: nenhuma tela a abriu
+  await page.getByRole('button', { name: 'Fechar' }).click(); await page.locator('#drop').waitFor();
+  assert.equal(await page.evaluate(() => location.hash), '#/arara');
   await fechar();
 });
 

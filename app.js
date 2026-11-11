@@ -1027,8 +1027,9 @@ function trocar(passagem, fazer) {
 const alca = document.querySelector('.alca');
 // dedo: a altura que leva a folha; pousou: onde o dedo tocou; arrastou: o dedo andou mais de 10 px dali, e o clique que vem junto não conta
 let dedo = null, pousou = 0, arrastou = false;
-// fechar volta a quem abriu a folha: a peça da arara à arara; o resto ao início
-const fecharFolha = () => { location.hash = rotaAtual() === 'sua' && daArara(location.hash.split('/')[2]) ? '#/arara' : '#/'; };
+// fechar volta a quem abriu a folha (o hashchange guarda a tela de onde ela subiu); aberta direto pelo endereço, a peça da arara volta à arara e o resto ao início
+let origemDaFolha = null;
+const fecharFolha = () => { location.hash = origemDaFolha || (rotaAtual() === 'sua' && daArara(location.hash.split('/')[2]) ? '#/arara' : '#/'); };
 function soltarFolha() { dedo = null; document.body.classList.remove('arrastando-folha', 'folha-volta'); }
 // pelo teclado (detail 0), sempre; o toque que atravessou uma troca de tela (a alça já escondida) não fecha a tela nova
 alca.addEventListener('click', e => { if (!alca.hidden && (!e.detail || !arrastou)) fecharFolha(); });
@@ -1105,8 +1106,11 @@ function tique() {
 
 // ---------- Partida ----------
 window.addEventListener('hashchange', e => {
-  const de = (e.oldURL.split('#')[1] || '').replace(/^\/?/, '').split('/')[0], para = rotaAtual();
-  trocar(Logica.passagem(de, para), () => {
+  const de = (e.oldURL.split('#')[1] || '').replace(/^\/?/, '').split('/')[0], para = rotaAtual(), passagem = Logica.passagem(de, para);
+  // a folha que sobe guarda a tela de onde veio, se voltar para ela é descer (de outra folha, fica a de antes); quando a folha desce, esquece
+  if (passagem === 'sobe' && Logica.passagem(para, de) === 'desce') origemDaFolha = '#' + (e.oldURL.split('#')[1] || '/');
+  else if (passagem === 'desce') origemDaFolha = null;
+  trocar(passagem, () => {
     // tela nova abre no topo, e a antiga já saiu na foto da passagem de onde a pessoa estava; redesenhar a mesma tela não passa por aqui
     scrollTo(0, 0);
     comoFoi = null; apagando = false;
