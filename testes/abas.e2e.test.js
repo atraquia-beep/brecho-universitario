@@ -1,4 +1,5 @@
 const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar, aoVivo } = require('./apoio.js');
+const D = require('../dados.js');
 const caixa = (page, sel) => page.locator(sel).first().evaluate(e => e.getBoundingClientRect().toJSON());
 const atual = page => page.locator('#abas [aria-current="page"]').innerText();
 test('barra: Comprar, Vender e Você a um toque, e some onde a peça ou a câmera ocupam a tela', async () => {
@@ -45,5 +46,23 @@ test('barra na tela larga: na coluna da direita, sem cobrir a folha da arara e s
   assert.deepEqual(await page.locator('#drop .foto').evaluate(e => { const r = e.getBoundingClientRect(); return [r.top, r.height]; }), [0, 720]);
   const minha = await page.getByRole('button', { name: 'É minha' }).boundingBox();
   assert.ok(minha.y + minha.height <= (await caixa(page, '#abas a')).top);
+  await fechar();
+});
+test('tela nova abre no topo: trocar de aba depois de rolar não herda a rolagem', async () => {
+  const reservas = D.ARARA.slice(0, 2).map((p, i) => ({ pecaId: p.id, codigo: 'AB2' + i, janela: 'terça, das 12h às 13h', creditosUsados: 0, aPagar: p.preco, retirada: false, nota: null, drop: null }));
+  const estado = { perfil: { nome: 'Deco', tamanho: 'M', pegadas: ['vintage', 'street'], teto: 40, curso: 'Administração', email: 'd000000@dac.unicamp.br' }, creditos: 0, reservas, anuncios: [], pedido: null, acordar: false, realce: '#FF0000', ultimoAnuncioSeg: null, ensaio: null, drop: null };
+  const { page, fechar } = await abrir({ largura: 390, altura: 664, antes: 'localStorage["brecho.v2"] = ' + JSON.stringify(JSON.stringify(estado)) });
+  const aba = nome => page.locator('#abas').getByRole('link', { name: nome });
+  const rolarAoFim = () => page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  const y = () => page.evaluate(() => scrollY);
+  await page.locator('a.palavra').first().waitFor();
+  await rolarAoFim(); assert.ok(await y() > 0, 'a tela de início rola');
+  await aba('Você').click(); await page.getByText('A cor do seu brechó é').waitFor();
+  assert.equal(await y(), 0);
+  await rolarAoFim(); assert.ok(await y() > 0, 'Você rola');
+  await aba('Comprar').click(); await page.getByText('À venda agora').waitFor();
+  assert.equal(await y(), 0);
+  const topo = await caixa(page, 'a.palavra');
+  assert.ok(topo.top >= 0 && topo.bottom <= 664, JSON.stringify(topo));
   await fechar();
 });

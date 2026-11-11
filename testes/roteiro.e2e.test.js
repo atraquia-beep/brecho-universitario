@@ -1,7 +1,7 @@
 const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar, aoVivo } = require('./apoio.js');
 const FRASE_DO_DROP = 'Catorze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Sete são M.';
-test('roteiro do vídeo de ponta a ponta', async () => {
-  const { page, passar, fechar } = await abrir(); await entrar(page);
+for (const [largura, altura] of [[390, 844], [1280, 720]]) test(`roteiro do vídeo de ponta a ponta em ${largura}×${altura}`, async () => {
+  const { page, passar, fechar } = await abrir({ largura, altura }); await entrar(page);
   await page.getByText('À venda agora').waitFor();
   await page.getByText(FRASE_DO_DROP).waitFor();
   await page.getByRole('button', { name: 'Me avise antes' }).click();

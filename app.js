@@ -990,6 +990,7 @@ function tique() {
 
 // ---------- Partida ----------
 window.addEventListener('hashchange', e => {
+  scrollTo(0, 0); // tela nova abre no topo; redesenhar a mesma tela não passa por aqui
   comoFoi = null; apagando = false;
   // a arara lembra as peças passadas só no vai e volta com "é sua"
   if (rotaAtual() === 'arara' && (e.oldURL.split('#')[1] || '').replace(/^\/?/, '').split('/')[0] !== 'sua') araraPassadas = [];

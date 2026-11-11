@@ -292,13 +292,13 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   .fecho { font-size: 44px; }
 
   /* Barra: só as palavras, a partir da coluna da direita; a faixa vazia deixa o toque passar para o que está embaixo */
-  #abas { max-width: 1440px; padding-left: calc(96px + var(--coluna)); gap: 40px; background: none; border-top: 0; pointer-events: none; }
+  #abas { max-width: 1440px; padding-left: calc(96px + var(--coluna)); gap: 40px; background-color: inherit; border-top: 0; pointer-events: none; }
   #abas a { flex: none; min-width: 44px; font-size: 17px; pointer-events: auto; }
   body:not(.sem-abas) { padding-bottom: calc(30px + var(--abas)); }
   /* na arara a foto volta à altura toda; a folha guarda embaixo o lugar da barra, e as palavras começam junto com o texto dela */
   body:not(.sem-abas) #drop { bottom: 0; }
   body:not(.sem-abas) .folha { padding-bottom: calc(34px + var(--abas)); }
-  body.ao-vivo #abas { max-width: none; padding-left: calc(55% + 48px); }
+  body.ao-vivo #abas { max-width: none; padding-left: calc(55% + 48px); background: none; }
 
   /* Entrada: palco preto, painel creme até a borda da janela (a sombra não cria rolagem; o recorte a segura no meio do vão) */
   body.entrada .painel {
