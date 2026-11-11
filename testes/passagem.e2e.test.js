@@ -9,14 +9,15 @@ const nomeDoTopo = page => page.locator('.topo').evaluate(e => getComputedStyle(
 // a entrada escalonada de #tela que ainda roda: a tela inteira já se moveu, então depois de uma passagem não sobra nenhuma
 const entrando = page => page.evaluate(() => document.getAnimations().filter(a => a instanceof CSSAnimation && a.effect.target.closest('#tela')).map(a => a.animationName));
 // quanto do caminho (da largura ou da altura) a tela de cima já andou com 10% do tempo da passagem
-const andouNoComeco = page => page.waitForFunction(() => document.getAnimations().some(a => a.effect && a.effect.pseudoElement === '::view-transition-old(root)'))
-  .then(() => page.evaluate(() => {
-    const a = document.getAnimations().find(a => a.effect.pseudoElement === '::view-transition-old(root)');
-    a.pause(); a.currentTime = a.effect.getComputedTiming().duration * .1;
-    const m = new DOMMatrix(getComputedStyle(document.documentElement, '::view-transition-old(root)').transform);
-    a.play();
-    return Math.max(m.m41 / innerWidth, m.m42 / innerHeight);
-  }));
+const andouNoComeco = page => page.waitForFunction(() => {
+  // achar, pausar, andar e ler numa tacada só: a animação não pode acabar entre uma ida ao navegador e outra
+  const a = document.getAnimations().find(a => a.effect && a.effect.pseudoElement === '::view-transition-old(root)');
+  if (!a) return false;
+  a.pause(); a.currentTime = a.effect.getComputedTiming().duration * .1;
+  const m = new DOMMatrix(getComputedStyle(document.documentElement, '::view-transition-old(root)').transform);
+  a.play();
+  return Math.max(m.m41 / innerWidth, m.m42 / innerHeight);
+}).then(h => h.jsonValue());
 
 // com movimento: entra e espera a abertura sair
 async function comMovimento(opcoes) {
@@ -88,6 +89,7 @@ test('ensaio vira drop com a cortina e sem passagem lateral', async () => {
         .observe(document, { subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['data-passagem'] });
     },
   });
+  await page.evaluate(() => { window.__vistos = []; }); // a entrada em passos também desliza: só conta daqui
   await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click();
   await passar(10000);
   await page.locator('#ao-vivo').waitFor(); await page.locator('#drop').waitFor();
@@ -165,6 +167,54 @@ test('É minha: com passagem, a folha que sobe é o retorno e só o passar solta
     assert.equal(await sentido(page), semApi ? '' : 'sobe');
     await page.locator('.codigo').waitFor(); await fimDaPassagem(page);
     assert.deepEqual(await page.evaluate(() => window.__fantasmas), semApi ? ['esquerda', 'direita'] : ['esquerda']);
+    await fechar();
+  }
+});
+
+// sem perfil: só a abertura sai e a entrada fica no e-mail
+async function naEntrada(opcoes) {
+  const aberto = await abrir({ movimento: 'no-preference', ...opcoes });
+  await aberto.page.locator('#abertura').waitFor({ state: 'detached', timeout: 8000 });
+  return aberto;
+}
+
+test('entrada desliza para a frente e mantém o foco no campo novo', async () => {
+  const { page, fechar } = await naEntrada();
+  await page.getByLabel('Seu e-mail da Unicamp').fill('d000000@dac.unicamp.br');
+  await page.getByRole('button', { name: 'Receber o código' }).click();
+  assert.equal(await sentido(page), 'ida');
+  await page.getByLabel('Dígito 1 de 4').waitFor(); await fimDaPassagem(page);
+  assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'Dígito 1 de 4');
+  await fechar();
+});
+
+test('opções se desdobram uma a uma', async () => {
+  const { page, fechar } = await comMovimento();
+  await page.locator('#abas').getByRole('link', { name: 'Você' }).click();
+  await page.getByRole('button', { name: /^Tamanho:/ }).waitFor(); await fimDaPassagem(page);
+  await page.getByRole('button', { name: /^Tamanho:/ }).click();
+  const js = await page.locator('.opcoes > button').evaluateAll(bs => bs.map(b => [b.style.getPropertyValue('--j'), getComputedStyle(b).animationName]));
+  assert.ok(js.length > 2);
+  js.forEach(([j, nome], n) => { assert.equal(j, String(n)); assert.match(nome, /entrar/); });
+  await fechar();
+});
+
+test('marca da aba acompanha a aba ativa, na barra de baixo e no computador', async () => {
+  for (const [largura, altura] of [[390, 844], [1280, 720]]) {
+    const { page, fechar } = await comMovimento({ largura, altura });
+    // a marca é o realce atrás da palavra: --aba-x/--aba-w seguem o span da aba ativa
+    const confere = async rotulo => {
+      const r = await page.evaluate(() => {
+        const abas = document.getElementById('abas'), caixa = abas.getBoundingClientRect(), s = abas.querySelector('[aria-current="page"] span').getBoundingClientRect(), cs = getComputedStyle(abas);
+        return { x: parseFloat(cs.getPropertyValue('--aba-x')), w: parseFloat(cs.getPropertyValue('--aba-w')), esperadoX: s.left - caixa.left, esperadoW: s.width };
+      });
+      assert.ok(Math.abs(r.x - r.esperadoX) <= 1 && Math.abs(r.w - r.esperadoW) <= 1, rotulo + ' ' + JSON.stringify(r));
+    };
+    await verPecas(page).click(); await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+    await confere(largura + ' arara');
+    await page.locator('#abas').getByRole('link', { name: 'Você' }).click();
+    await page.getByRole('button', { name: /^Tamanho:/ }).waitFor(); await fimDaPassagem(page);
+    await confere(largura + ' você');
     await fechar();
   }
 });

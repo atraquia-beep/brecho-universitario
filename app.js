@@ -95,9 +95,10 @@ function palavra(texto, rotulo, opcoes, aoEscolher, { ate = 1, atuais = [texto] 
     const marcar = () => lista.querySelectorAll('button[data-o]').forEach(o => {
       o.setAttribute(ate > 1 ? 'aria-pressed' : 'aria-current', String(atuais.includes(o.textContent)));
     });
-    opcoes.forEach(op => {
+    opcoes.forEach((op, n) => {
       const o = document.createElement('button');
       o.type = 'button';
+      o.style.setProperty('--j', n);
       o.className = 'palavra';
       o.dataset.o = '1';
       o.textContent = op;
@@ -279,9 +280,11 @@ function primeiraVez() {
   const ir = (passo, foco) => {
     clearTimeout(acessoTimer); acessoTimer = null;
     acesso = passo;
-    desenhar();
-    document.querySelector('#tela .painel').classList.add('chega');
-    document.querySelector(foco).focus();
+    trocar('ida', () => {
+      desenhar();
+      document.querySelector('#tela .painel').classList.add('chega');
+      document.querySelector(foco).focus();
+    });
   };
   const d = DADOS.DROP, ficha = el('p', { className: 'ficha lab' });
   ficha.append(el('span', { textContent: 'O brechó do campus' }), el('span', { textContent: 'Limeira · ' + new Date().getFullYear() }));
@@ -906,6 +909,16 @@ const rotas = { '': { escura: true, tela: telaPrincipal }, sua: { escura: false,
   voce: { escura: false, tela: telaVoce }, arara: { escura: true, tela: telaArara } };
 let ultimaVista = null; // a entrada animada só toca quando a vista muda (rota, tela principal ou peça do drop)
 
+// O realce da aba ativa é o #abas::after: o estilo.css o põe onde --aba-x/-y/-w/-h dizem, medidos aqui no span da aba (o negrito já aplicado).
+function marcarAba() {
+  const abas = document.getElementById('abas'), span = abas.querySelector('[aria-current="page"] span');
+  const props = ['--aba-x', '--aba-y', '--aba-w', '--aba-h'];
+  if (!span || !span.offsetWidth) { props.forEach(p => abas.style.removeProperty(p)); return; } // sem aba ativa ou barra escondida
+  const c = abas.getBoundingClientRect(), r = span.getBoundingClientRect();
+  [r.left - c.left, r.top - c.top + r.height * .62, r.width, r.height * .38].forEach((v, i) => abas.style.setProperty(props[i], v + 'px'));
+}
+if (document.fonts) document.fonts.ready.then(() => marcarAba());
+
 function desenhar() {
   fechar();
   clearTimeout(avisoTimer);
@@ -943,6 +956,7 @@ function desenhar() {
     (n.classList.contains('lado') ? Array.prototype.slice.call(n.children) : [n]).forEach(f => f.style.setProperty('--i', i++));
   });
   encaixarTudo();
+  marcarAba(); // depois das classes do body: o ao-vivo muda o lugar das abas no computador
   if (rotuloParaFocar) {
     const alvo = Array.prototype.find.call(tela.querySelectorAll('button.palavra'), b => (b.getAttribute('aria-label') || '').indexOf(rotuloParaFocar + ': ') === 0);
     if (alvo) alvo.focus();
@@ -1025,7 +1039,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') pegarPeca(); else passarPeca();
 });
 document.addEventListener('touchstart', () => {}, { passive: true }); // o Safari do iPhone só mostra :active (o toque do botão) com um ouvinte de toque
-window.addEventListener('resize', encaixarTudo);
+window.addEventListener('resize', () => { encaixarTudo(); marcarAba(); });
 document.fonts.load('700 100px "Inter Tight"').then(encaixarTudo, () => {}); // antes de a fonte chegar a medida sai com a fonte reserva
 aplicarRealce();
 abertura();

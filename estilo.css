@@ -50,7 +50,12 @@ body {
 }
 #abas a { flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--apoio); text-decoration: none; }
 #abas [aria-current="page"] { color: var(--tinta); }
-#abas [aria-current="page"] span { font-weight: 700; background: linear-gradient(transparent 62%, var(--realce) 62%); }
+#abas [aria-current="page"] span { font-weight: 700; }
+/* o realce (os 38% de baixo da palavra) é uma peça só que desliza entre as abas; app.js mede --aba-x/-y/-w/-h no span ativo */
+#abas::after {
+  content: ''; position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none; background: var(--realce);
+  width: var(--aba-w, 0px); height: var(--aba-h, 0px); transform: translate(var(--aba-x, 0px), var(--aba-y, 0px));
+}
 body.sem-abas #abas { display: none; }
 /* o fim da tela e a folha da arara ficam acima da barra */
 body:not(.sem-abas) { padding-bottom: calc(22px + var(--abas)); }
@@ -291,8 +296,14 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   html[data-passagem=sobe]::view-transition-new(root) { animation-name: folha-sobe; }
   html[data-passagem=desce]::view-transition-old(root) { z-index: 2; animation-name: folha-desce; }
   html[data-passagem=desce]::view-transition-new(root) { animation-name: desencolhe; }
-  ::view-transition-old(abas):only-child { animation-name: barra-desce; }
+  /* com a barra nos dois lados só o grupo se move; sem o fundido a palavra não borra e o realce não aparece duas vezes.
+     (:not(:only-child) não vale em pseudo-elemento: o padrão é sem fundido e o :only-child devolve a animação de entrar/sair) */
+  ::view-transition-old(abas) { opacity: 0; animation-name: none; }
+  ::view-transition-new(abas) { animation-name: none; }
+  ::view-transition-old(abas):only-child { opacity: 1; animation-name: barra-desce; }
   ::view-transition-new(abas):only-child { animation-name: barra-sobe; }
+  #abas::after { transition: transform .45s var(--expo), width .45s var(--expo), height .45s var(--expo); }
+  .opcoes > * { animation: entrar .35s var(--expo) both; animation-delay: calc(var(--j, 0) * 30ms); }
   /* fora de uma passagem (a entrada, o fim do drop) a barra que volta também sobe; dentro dela, quem a move é a passagem */
   html:not([data-passagem]) body:not(.sem-abas) #abas { transition: transform .4s var(--expo); }
   @starting-style { body:not(.sem-abas) #abas { transform: translateY(100%); } }
