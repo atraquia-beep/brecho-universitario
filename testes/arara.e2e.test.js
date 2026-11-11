@@ -71,6 +71,22 @@ test('arara: tudo reservado, a espera avisa e a rota mostra a arara vazia', asyn
   assert.equal(await page.locator('.vitrine, .principal').count(), 0);
   await fechar();
 });
+test('arara abre na peça tocada da vitrine', async () => {
+  const { page, fechar } = await abrir(); await entrar(page);
+  await page.locator('.vitrine-peca').nth(2).click(); await page.locator('#drop').waitFor();
+  assert.equal(await nomeNaTela(page), 'Jaqueta jeans cinza');
+  // sem passagem animada a troca é na hora, e a foto não guarda o nome da passagem que não houve
+  assert.equal(await page.evaluate(() => document.getElementById('peca').style.viewTransitionName), '');
+  // passo segue a ordem de sempre, sem a peça já vista
+  await page.getByRole('button', { name: 'passo' }).click();
+  assert.equal(await nomeNaTela(page), 'Jaqueta bomber terracota');
+  // a peça tocada vem na frente só na chegada: o endereço volta a ser o da arara e "olhar de novo" recomeça da ordem de sempre
+  assert.equal(await page.evaluate(() => location.hash), '#/arara');
+  for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'passo' }).click();
+  await page.getByRole('button', { name: 'olhar de novo' }).click();
+  assert.equal(await nomeNaTela(page), 'Jaqueta bomber terracota');
+  await fechar();
+});
 test('arara: na tela larga a peça fica à esquerda e a folha à direita, sem rolagem', async () => {
   const { page, fechar } = await abrir({ largura: 1280, altura: 720 }); await entrar(page);
   await page.getByRole('button', { name: 'Ver as 5 peças' }).click(); await page.locator('#drop').waitFor();

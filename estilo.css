@@ -307,6 +307,19 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   /* fora de uma passagem (a entrada, o fim do drop) a barra que volta também sobe; dentro dela, quem a move é a passagem */
   html:not([data-passagem]) body:not(.sem-abas) #abas { transition: transform .4s var(--expo); }
   @starting-style { body:not(.sem-abas) #abas { transform: translateY(100%); } }
+  /* a foto tocada na vitrine cresce até a foto grande da arara (nome 'peca', só nessa passagem: app.js) enquanto o resto faz a ida.
+     As duas fotos ficam na largura do grupo, centradas: a mesma foto na mesma escala, sem esticar. A nova cobre a antiga, sem fundido;
+     onde a nova não chega (no computador ela mostra menos da altura da foto que a vitrine), aparece a antiga, que é a mesma imagem. */
+  ::view-transition-image-pair(peca) { overflow: clip; }
+  ::view-transition-old(peca), ::view-transition-new(peca) { animation: none; mix-blend-mode: normal; top: 50%; translate: 0 -50%; }
+  /* enquanto ela cresce, o lugar dela na tela nova fica no preto da arara e o que vai por cima da foto (topo, pílulas, sombra) espera ela pousar */
+  body.pousando .foto { background: none; }
+  .topo, .pilulas, .foto::after { transition: opacity .3s var(--expo); }
+  body.pousando .topo, body.pousando .pilulas, body.pousando .foto::after { opacity: 0; transition: none; } /* some na hora; só a volta é suave */
+  /* a vitrine encaixa foto a foto; quando a tela abre sem passagem (#tela.entra), as fotos chegam uma a uma */
+  .vitrine { scroll-snap-type: x mandatory; }
+  .vitrine-peca { scroll-snap-align: start; }
+  #tela.entra .vitrine-peca { animation: entrar .55s var(--expo) both; animation-delay: calc(var(--atraso, 0ms) + var(--i, 0) * 60ms + var(--j) * 70ms); }
 }
 @keyframes recua { to { transform: translateX(-28%); filter: brightness(.6); } }
 @keyframes volta-da-esquerda { from { transform: translateX(-28%); filter: brightness(.6); } }

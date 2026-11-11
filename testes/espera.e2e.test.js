@@ -9,7 +9,7 @@ test('início: as peças à venda primeiro, depois o drop explicado', async () =
   assert.deepEqual(await page.locator('.vitrine img').evaluateAll(is => is.map(i => i.dataset.peca)), ARARA_DO_DECO);
   assert.deepEqual(await page.locator('.vitrine-nome').allInnerTexts(), ['Jaqueta bomber · M', 'Suéter · M', 'Jaqueta jeans · G', 'Suéter · P', 'Camisa social · M']);
   assert.deepEqual((await page.locator('.vitrine .etiqueta').allInnerTexts()).map(t => t.replace(/\s/g, ' ')), ['R$ 40', 'R$ 30', 'R$ 32', 'R$ 28', 'R$ 20']);
-  assert.ok((await page.locator('.vitrine-peca').evaluateAll(as => as.map(a => a.getAttribute('href')))).every(h => h === '#/arara'));
+  assert.deepEqual(await page.locator('.vitrine-peca').evaluateAll(as => as.map(a => a.getAttribute('href'))), ARARA_DO_DECO.map(id => '#/arara/' + id));
   await page.getByText('Próximo drop · quarta, 20h').waitFor();
   assert.equal(await page.locator('#contagem').innerText(), '35:00:00');
   await passar(1000); assert.equal(await page.locator('#contagem').innerText(), '34:59:59');
@@ -49,13 +49,13 @@ test('início: a primeira dobra do iPhone 13 mostra peças, botão e o começo d
     await fechar();
   }
 });
-test('início: tocar numa foto abre a arara do começo, e o toque duplo em É minha reserva uma vez só', async () => {
+test('início: tocar numa foto abre a arara nessa peça, e o toque duplo em É minha reserva uma vez só', async () => {
   const { page, fechar } = await abrir(); await entrar(page);
   await page.locator('.vitrine-peca').nth(2).click(); await page.locator('#drop').waitFor();
-  assert.match(await page.locator('.folha .frase').first().innerText(), /^Jaqueta bomber terracota,/);
+  assert.match(await page.locator('.folha .frase').first().innerText(), /^Jaqueta jeans cinza,/);
   await page.getByRole('button', { name: 'É minha' }).evaluate(b => { b.click(); b.click(); });
   await page.locator('.codigo').waitFor();
-  assert.deepEqual((await salvo(page)).reservas.map(r => r.pecaId), ['bomber-terracota-tiago']);
+  assert.deepEqual((await salvo(page)).reservas.map(r => r.pecaId), ['jaqueta-jeans-cinza-murilo']);
   await fechar();
 });
 test('perfil fora do roteiro', async () => {

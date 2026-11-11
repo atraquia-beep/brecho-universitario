@@ -74,6 +74,8 @@ test('toque no meio da passagem termina na tela certa', async () => {
   await verPecas(page).click();
   assert.equal(await sentido(page), 'ida');
   await page.evaluate(() => { location.hash = '#/'; }); // o voltar do navegador com a arara ainda entrando
+  // a passagem pulada não apaga a marca da que começou depois dela
+  await page.waitForFunction(() => document.documentElement.dataset.passagem === 'volta', null, { timeout: 2000 });
   await naEspera();
   // com toques de verdade, um logo depois do outro
   await verPecas(page).click(); await page.locator('#marca').click();
@@ -113,6 +115,7 @@ test('tela larga: passagem lateral sem rolagem horizontal', async () => {
 
 test('movimento reduzido: nenhuma passagem', async () => {
   const { page, fechar } = await abrir(); await entrar(page);
+  assert.ok((await page.locator('.vitrine-peca').evaluateAll(as => as.map(a => getComputedStyle(a).animationName))).every(n => n === 'none'));
   await verPecas(page).click();
   assert.equal(await sentido(page), '');
   await page.locator('#drop').waitFor();
@@ -235,5 +238,46 @@ test('marca da aba: barra que aparece já a encontra no lugar, sem varrer desde 
   });
   const r = await h.jsonValue();
   assert.ok(r.feito, JSON.stringify(r));
+  await fechar();
+});
+
+// o #peca na primeira vez que aparece: o nome de view transition dele, a passagem em curso nessa hora e se o que vai por cima da foto espera ela pousar
+const pecaNaPassagem = page => page.waitForFunction(() => { const p = document.getElementById('peca'); return p && [getComputedStyle(p).viewTransitionName, document.documentElement.dataset.passagem || '', document.body.classList.contains('pousando')]; }, null, { timeout: 2000 }).then(h => h.jsonValue());
+
+test('a foto tocada cresce até a arara', async () => {
+  const { page, fechar } = await comMovimento();
+  // o nome da foto na hora do toque: este ouvinte roda depois do da vitrine
+  await page.evaluate(() => document.addEventListener('click', e => { const a = e.target.closest('.vitrine-peca'); if (a) window.__nome = a.querySelector('img').style.viewTransitionName; }));
+  // abrir a peça em outra aba (Ctrl) não troca a tela aqui: a foto não fica com o nome para a próxima passagem
+  await page.locator('.vitrine-peca').first().click({ modifiers: ['Control'] });
+  assert.equal(await page.evaluate(() => window.__nome), '');
+  await page.locator('.vitrine-peca').nth(2).click();
+  assert.equal(await page.evaluate(() => window.__nome), 'peca');
+  assert.deepEqual(await pecaNaPassagem(page), ['peca', 'ida', true]); // a foto grande da arara leva o mesmo nome enquanto a passagem corre
+  await fimDaPassagem(page);
+  assert.deepEqual(await page.evaluate(() => [Array.prototype.filter.call(document.querySelectorAll('*'), e => getComputedStyle(e).viewTransitionName === 'peca').length,
+    document.body.classList.contains('pousando')]), [0, false]);
+  // nenhuma outra passagem dá o nome à foto: por "Ver as N peças" ela desliza com a tela
+  await page.locator('#marca').click(); await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
+  await verPecas(page).click();
+  assert.deepEqual(await pecaNaPassagem(page), ['none', 'ida', false]);
+  await fimDaPassagem(page);
+  await fechar();
+});
+
+test('vitrine: encaixa foto a foto, e as fotos chegam uma a uma só quando a tela abre sem passagem', async () => {
+  const { page, fechar } = await comMovimento(); // a tela de início abriu depois de entrar, sem passagem
+  const fotos = () => page.locator('.vitrine-peca').evaluateAll(as => as.map(a => { const cs = getComputedStyle(a); return [cs.scrollSnapAlign, cs.animationName, parseFloat(cs.animationDelay)]; }));
+  assert.equal(await page.locator('.vitrine').evaluate(v => getComputedStyle(v).scrollSnapType), 'x mandatory');
+  const chegada = await fotos();
+  chegada.forEach(([encaixe, nome, atraso], n) => {
+    assert.deepEqual([encaixe, nome], ['start', 'entrar']);
+    const passo = n && atraso - chegada[n - 1][2];
+    if (n) assert.ok(passo > .059 && passo < .081, 'passo de ' + passo + ' s');
+  });
+  // depois de uma passagem a tela inteira já se moveu: as fotos não entram de novo
+  await verPecas(page).click(); await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  await page.locator('#marca').click(); await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
+  assert.ok((await fotos()).every(([, nome]) => nome === 'none'));
   await fechar();
 });

@@ -392,15 +392,20 @@ function ensaiarAgora() {
 }
 const botaoDoTeste = () => botaoPalavra('ver um drop de teste agora (' + DADOS.DROP.ensaioMs / 1000 + ' s)', ensaiarAgora);
 
-// as peças à venda, lado a lado; qualquer foto abre a arara do começo
+// as peças à venda, lado a lado; a foto tocada abre a arara nessa peça e, na passagem, cresce até a foto grande (nome 'peca')
 function vitrine(pecas) {
   const fila = el('div', { className: 'vitrine' });
-  pecas.forEach(p => {
+  pecas.forEach((p, j) => {
     const img = el('img', { src: p.foto, alt: '' });
     img.dataset.peca = p.id;
     const foto = el('span', { className: 'vitrine-foto' });
     foto.append(img, el('span', { className: 'etiqueta', textContent: Logica.dinheiro(p.preco) }));
-    const a = el('a', { className: 'vitrine-peca', href: '#/arara' });
+    const a = el('a', { className: 'vitrine-peca', href: '#/arara/' + p.id });
+    a.style.setProperty('--j', j);
+    a.addEventListener('click', e => {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return; // abre em outra aba ou janela: aqui nenhuma passagem nasce do toque
+      soltarFoto(); img.style.viewTransitionName = 'peca'; fotoQueCresce = img;
+    });
     a.append(foto, el('span', { className: 'vitrine-nome apoio', textContent: maiuscula(p.tipo) + ' · ' + p.tamanho }));
     fila.appendChild(a);
   });
@@ -592,7 +597,13 @@ const pilhaDaArara = todas => Logica.ordenarPilha(DADOS.ARARA, estado.perfil, nu
 const linkDaArara = () => el('a', { className: 'palavra', href: '#/arara', textContent: 'as peças à venda' });
 
 function telaArara() {
-  const pilha = pilhaDaArara();
+  // #/arara/<id> (a foto tocada na vitrine) põe a peça na frente só na chegada: o endereço volta a #/arara sem outra passagem,
+  // e "olhar de novo" e o recarregar seguem a ordem de sempre
+  const id = location.hash.split('/')[2];
+  if (id) history.replaceState(null, '', '#/arara');
+  let pilha = pilhaDaArara();
+  const tocada = pilha.find(p => p.id === id);
+  if (tocada) pilha = [tocada].concat(pilha.filter(p => p !== tocada));
   if (!pilha.length) {
     pecaNaTela = null;
     const resta = pilhaDaArara(true).length;
@@ -972,15 +983,25 @@ function desenhar() {
 let transicao = null; // a View Transition em curso
 const passagemAnima = () => !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// A foto tocada na vitrine cresce até a foto grande da arara: o toque dá a ela o nome 'peca' e o hashchange dá o mesmo nome ao #peca novo.
+// Só essa passagem leva o nome: no fim de qualquer passagem, mesmo pulada (ou na hora, sem passagem animada), as duas o perdem,
+// senão o #peca sairia do grupo da tela na passagem seguinte (subir para É seu, voltar).
+let fotoQueCresce = null;
+function soltarFoto() {
+  [fotoQueCresce, document.getElementById('peca')].forEach(e => { if (e) e.style.viewTransitionName = ''; });
+  fotoQueCresce = null;
+  document.body.classList.remove('pousando');
+}
+
 function trocar(passagem, fazer) {
-  if (!passagem || !passagemAnima()) { fazer(); return; }
+  if (!passagem || !passagemAnima()) { fazer(); soltarFoto(); return; }
   if (transicao) transicao.skipTransition(); // um toque no meio: a passagem de antes acaba na hora e a nova parte dali
   const html = document.documentElement;
   html.dataset.passagem = passagem;
   const t = transicao = document.startViewTransition(fazer);
   t.ready.catch(() => {}); // a passagem pulada rejeita o ready; não é erro
   // a que foi pulada não apaga a marca da que começou depois
-  t.finished.finally(() => { if (transicao === t) { transicao = null; delete html.dataset.passagem; } });
+  t.finished.finally(() => { soltarFoto(); if (transicao === t) { transicao = null; delete html.dataset.passagem; } });
 }
 
 // ---------- Tique ----------
@@ -1033,6 +1054,9 @@ window.addEventListener('hashchange', e => {
     // a arara lembra as peças passadas só no vai e volta com "é sua"
     if (para === 'arara' && de !== 'sua') araraPassadas = [];
     desenhar();
+    // a foto tocada na vitrine chega como a foto grande; o que vai por cima dela espera ela pousar (estilo.css)
+    const peca = document.getElementById('peca');
+    if (fotoQueCresce && peca) { peca.style.viewTransitionName = 'peca'; document.body.classList.add('pousando'); }
   });
 });
 document.addEventListener('keydown', e => {
