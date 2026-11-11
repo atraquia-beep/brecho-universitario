@@ -456,6 +456,7 @@ function telaEspera(sit) {
 
 // ---------- Drop no ar ----------
 let pecaNaTela = null;   // a peça que "passo" e "É minha" tratam
+let puxou = '';          // o --puxa da peça que acabou de sair (passarPeca); vazio fora dessa hora
 let avisoTimer = null;
 
 const placarTexto = () => { const p = Logica.placar(estado, DADOS.CATALOGO); return p.foram + ' de ' + p.total + ' já foram'; };
@@ -482,8 +483,10 @@ function fantasma(lado) {
 function passarPeca() {
   fantasma('esquerda');
   const comFoco = document.activeElement && document.activeElement.id === 'passo';
+  puxou = document.querySelector('#drop .foto').style.getPropertyValue('--puxa'); // o quanto a peça de baixo já cresceu com o arraste
   if (rotaAtual() === 'arara') { araraPassadas.push(pecaNaTela.id); desenhar(); }
   else mudar(Logica.passar(estado, pecaNaTela.id));
+  puxou = '';
   const alvo = document.getElementById('passo') || document.getElementById('arara-fim');
   if (comFoco && alvo) alvo.focus();
 }
@@ -507,12 +510,16 @@ function avisoNoDrop(no) {
   avisoTimer = setTimeout(() => { aviso.hidden = true; }, 6000);
 }
 
-// a foto acompanha o dedo; 80 px ou mais age, menos volta ao lugar
+// a foto acompanha o dedo; 80 px ou mais age, menos volta ao lugar (com mola: estilo.css)
 function arrastavel(cartao, carimbo) {
   let x0 = null;
   const mostrar = dx => {
+    const a = Math.abs(dx), k = Math.max(0, Math.min((a - 24) / 56, 1)); // o carimbo surge aos 24 px e fica inteiro aos 80, quando soltar já vale
     cartao.style.transform = dx ? 'translateX(' + dx + 'px) rotate(' + dx / 18 + 'deg)' : '';
-    carimbo.hidden = Math.abs(dx) < 24;
+    cartao.parentNode.style.setProperty('--puxa', Math.min(a / 80, 1)); // a peça de baixo cresce junto (estilo.css)
+    carimbo.hidden = a < 24;
+    carimbo.style.opacity = k;
+    carimbo.style.scale = .85 + .15 * k; // scale, e não transform: a inclinação do carimbo mora no transform
     carimbo.className = 'carimbo ' + (dx > 0 ? 'direita' : 'esquerda');
     carimbo.textContent = dx > 0 ? 'é minha' : 'passo';
   };
@@ -539,7 +546,6 @@ function arrastavel(cartao, carimbo) {
 // A peça em tela cheia, com a folha embaixo (no computador, ao lado). Serve ao drop e à arara: "meio" entra antes das ações, "fim" depois.
 function secaoDaPeca(rotulo, peca, proxima, pilulas, meio, fim) {
   pecaNaTela = peca;
-  if (proxima) new Image().src = proxima.foto; // a próxima já chega carregada
   const img = el('img', { id: 'peca', src: peca.foto, alt: peca.alt, draggable: false });
   const carimbo = el('span', { className: 'carimbo', hidden: true });
   carimbo.setAttribute('aria-hidden', 'true');
@@ -549,6 +555,10 @@ function secaoDaPeca(rotulo, peca, proxima, pilulas, meio, fim) {
   const topo = el('div', { className: 'pilulas' });
   topo.append(...pilulas);
   const foto = el('div', { className: 'foto' });
+  // a peça que sobe continua do tamanho a que o arraste levou a de baixo (estilo.css, da-pilha); posto antes de a foto entrar na página
+  foto.style.setProperty('--puxou', puxou);
+  // a próxima espera embaixo do cartão (e assim já chega carregada)
+  if (proxima) { const embaixo = el('img', { className: 'proxima', src: proxima.foto, alt: '' }); embaixo.setAttribute('aria-hidden', 'true'); foto.appendChild(embaixo); }
   foto.append(cartao, topo);
   const passo = botaoPalavra('passo', passarPeca);
   passo.id = 'passo';

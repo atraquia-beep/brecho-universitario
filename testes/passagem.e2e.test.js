@@ -241,8 +241,9 @@ test('marca da aba: barra que aparece já a encontra no lugar, sem varrer desde 
   await fechar();
 });
 
-// o #peca na primeira vez que aparece: o nome de view transition dele, a passagem em curso nessa hora e se o que vai por cima da foto espera ela pousar
-const pecaNaPassagem = page => page.waitForFunction(() => { const p = document.getElementById('peca'); return p && [getComputedStyle(p).viewTransitionName, document.documentElement.dataset.passagem || '', document.body.classList.contains('pousando')]; }, null, { timeout: 2000 }).then(h => h.jsonValue());
+// o #peca na primeira vez que aparece: o nome de view transition dele, a passagem em curso nessa hora, se o que vai por cima da foto espera ela pousar
+// e a opacidade da peça de baixo (outra roupa, que não pode aparecer em volta da foto que cresce)
+const pecaNaPassagem = page => page.waitForFunction(() => { const p = document.getElementById('peca'), q = document.querySelector('.proxima'); return p && [getComputedStyle(p).viewTransitionName, document.documentElement.dataset.passagem || '', document.body.classList.contains('pousando'), q && getComputedStyle(q).opacity]; }, null, { timeout: 2000 }).then(h => h.jsonValue());
 
 test('a foto tocada cresce até a arara', async () => {
   const { page, fechar } = await comMovimento();
@@ -253,14 +254,14 @@ test('a foto tocada cresce até a arara', async () => {
   assert.equal(await page.evaluate(() => window.__nome), '');
   await page.locator('.vitrine-peca').nth(2).click();
   assert.equal(await page.evaluate(() => window.__nome), 'peca');
-  assert.deepEqual(await pecaNaPassagem(page), ['peca', 'ida', true]); // a foto grande da arara leva o mesmo nome enquanto a passagem corre
+  assert.deepEqual(await pecaNaPassagem(page), ['peca', 'ida', true, '0']); // a foto grande da arara leva o mesmo nome enquanto a passagem corre
   await fimDaPassagem(page);
   assert.deepEqual(await page.evaluate(() => [Array.prototype.filter.call(document.querySelectorAll('*'), e => getComputedStyle(e).viewTransitionName === 'peca').length,
     document.body.classList.contains('pousando')]), [0, false]);
   // nenhuma outra passagem dá o nome à foto: por "Ver as N peças" ela desliza com a tela
   await page.locator('#marca').click(); await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
   await verPecas(page).click();
-  assert.deepEqual(await pecaNaPassagem(page), ['none', 'ida', false]);
+  assert.deepEqual(await pecaNaPassagem(page), ['none', 'ida', false, '1']);
   await fimDaPassagem(page);
   await fechar();
 });
@@ -279,5 +280,77 @@ test('vitrine: encaixa foto a foto, e as fotos chegam uma a uma só quando a tel
   await verPecas(page).click(); await page.locator('#drop').waitFor(); await fimDaPassagem(page);
   await page.locator('#marca').click(); await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
   assert.ok((await fotos()).every(([, nome]) => nome === 'none'));
+  await fechar();
+});
+
+// ---------- A pilha: a peça de baixo, o arraste e a mola ----------
+// na arara, com a passagem de chegada já terminada
+async function naArara() {
+  const aberto = await comMovimento();
+  await verPecas(aberto.page).click(); await aberto.page.locator('#drop').waitFor(); await fimDaPassagem(aberto.page);
+  return aberto;
+}
+// o dedo (o mouse) no meio da foto, andando dx px para o lado, sem soltar
+async function puxar(page, dx) {
+  const b = await page.locator('#peca').boundingBox(), x = b.x + b.width / 2, y = b.y + b.height / 2;
+  await page.mouse.move(x, y); await page.mouse.down();
+  await page.mouse.move(x + dx / 2, y, { steps: 4 }); await page.mouse.move(x + dx, y, { steps: 4 });
+}
+const nomeDaPeca = page => page.locator('.folha .frase').first().innerText().then(t => t.split(',')[0]);
+const brilho = filtro => Number(/brightness\(([\d.]+)\)/.exec(filtro)[1]);
+
+test('a próxima peça espera embaixo e cresce com o arraste', async () => {
+  const { page, fechar } = await naArara();
+  // a segunda peça da arara do Deco, atrás do cartão e fora da leitura de tela
+  assert.deepEqual(await page.locator('#drop .foto > img.proxima').evaluateAll(is => is.map(i => [i.getAttribute('src'), i.alt, i.getAttribute('aria-hidden'), i.nextElementSibling.className])),
+    [['fotos/sueter-marinho.jpg', '', 'true', 'cartao']]);
+  await puxar(page, 40);
+  const r = await page.evaluate(() => {
+    const c = getComputedStyle(document.querySelector('.carimbo')), q = document.querySelector('.proxima'), p = getComputedStyle(q), giro = new DOMMatrix(c.transform);
+    return { puxa: Number(getComputedStyle(document.querySelector('#drop .foto')).getPropertyValue('--puxa')), opacidade: Number(c.opacity), escala: Number(c.scale),
+      giro: Math.round(Math.atan2(giro.b, giro.a) * 180 / Math.PI), proxima: new DOMMatrix(p.transform).a, filtro: p.filter, atraso: q.getAnimations().length };
+  });
+  assert.ok(r.puxa > .4 && r.puxa < .6, JSON.stringify(r));
+  // o carimbo aparece aos poucos e cresce até o tamanho dele, sem perder a inclinação
+  assert.ok(r.opacidade > 0 && r.opacidade < 1, JSON.stringify(r));
+  assert.ok(r.escala > .85 && r.escala < 1, JSON.stringify(r));
+  assert.equal(r.giro, -10);
+  // a peça de baixo cresce e clareia junto com o arraste, colada ao dedo (sem transição correndo atrás)
+  assert.ok(r.proxima > .94 && r.proxima < 1 && brilho(r.filtro) > .6 && brilho(r.filtro) < 1, JSON.stringify(r));
+  assert.equal(r.atraso, 0);
+  await fechar();
+});
+
+test('soltar antes do limite volta com mola', async () => {
+  const { page, fechar } = await naArara();
+  const antes = await nomeDaPeca(page);
+  await puxar(page, 40); await page.mouse.up();
+  const curva = await page.locator('.cartao').evaluate(c => getComputedStyle(c).transitionTimingFunction);
+  const pontos = /cubic-bezier\(([^)]+)\)/.exec(curva);
+  assert.ok(pontos && Number(pontos[1].split(',')[1]) > 1, curva); // passa do ponto e volta
+  assert.equal(await nomeDaPeca(page), antes);
+  // a de baixo volta para a pilha junto com o cartão, sem pular de tamanho nem de luz
+  assert.equal(await page.locator('#drop .foto').evaluate(f => f.style.getPropertyValue('--puxa')), '0');
+  assert.deepEqual(await page.evaluate(() => ['.cartao', '.proxima'].map(s => getComputedStyle(document.querySelector(s)).transitionDuration)), ['0.5s', '0.5s, 0.5s']);
+  await fechar();
+});
+
+test('a peça nova continua de onde a de baixo estava: inteira depois do arraste, da pilha depois do "passo"', async () => {
+  const { page, fechar } = await naArara();
+  // escala e brilho do #peca no começo da entrada: achar, pausar no zero, ler e soltar numa tacada só
+  const comeco = () => page.waitForFunction(() => {
+    const p = document.getElementById('peca'), a = p && p.getAnimations()[0];
+    if (!a) return false;
+    a.pause(); a.currentTime = 0;
+    const cs = getComputedStyle(p), r = [new DOMMatrix(cs.transform).a, cs.filter];
+    a.play();
+    return r;
+  }, null, { timeout: 2000 }).then(h => h.jsonValue()).then(([escala, filtro]) => [Math.round(escala * 100) / 100, Math.round(brilho(filtro) * 100) / 100]);
+  const primeira = await nomeDaPeca(page);
+  await puxar(page, -150); await page.mouse.up();
+  assert.deepEqual(await comeco(), [1, 1]); // já tinha crescido embaixo do dedo: não encolhe nem escurece de novo
+  assert.notEqual(await nomeDaPeca(page), primeira);
+  await page.getByRole('button', { name: 'passo' }).click();
+  assert.deepEqual(await comeco(), [.94, .6]); // sem arraste, sobe da pilha
   await fechar();
 });

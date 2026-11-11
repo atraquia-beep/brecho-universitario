@@ -11,6 +11,7 @@ html { overscroll-behavior-y: none; }
   --realce: #FF0000; --cor: var(--realce); /* --cor guarda a cor cheia nas duas luzes */
   --fonte: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --expo: cubic-bezier(.19, 1, .22, 1); --io: cubic-bezier(.87, 0, .13, 1);
+  --mola: cubic-bezier(.34, 1.56, .64, 1); /* passa um pouco do ponto e volta */
   /* largura útil da coluna do celular: os títulos gigantes são calculados para caber nela de ponta a ponta */
   --coluna: calc(100vw - 48px);
   /* altura da barra de baixo, mais a área segura do iPhone */
@@ -176,6 +177,8 @@ body.ao-vivo #marca, body.ao-vivo #conta { color: var(--creme); }
 .cartao { position: absolute; top: 0; bottom: 0; left: 0; right: 0; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
 .cartao.arrastando { cursor: grabbing; }
 #peca { display: block; width: 100%; height: 100%; object-fit: cover; background: #262626; -webkit-user-drag: none; -webkit-touch-callout: none; }
+/* a peça seguinte, embaixo do cartão: aparece onde o cartão sai do lugar (o tamanho e a luz dela vêm do movimento, mais abaixo) */
+.proxima { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .carimbo { position: absolute; top: 128px; font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -.03em; text-transform: uppercase; color: var(--creme); border: 3px solid var(--creme); padding: 7px 12px 6px; text-shadow: 0 0 12px rgba(0, 0, 0, .35); }
 .carimbo.direita { left: 22px; transform: rotate(-10deg); background: var(--cor); border-color: var(--cor); color: #000; text-shadow: none; }
 .carimbo.esquerda { right: 22px; transform: rotate(10deg); }
@@ -249,7 +252,7 @@ body.abrindo { overflow: hidden; --atraso: 2950ms; }
 body { transition: background-color .7s var(--expo), color .7s var(--expo); }
 .principal { transition: color .4s var(--expo); }
 .principal::before { transition: transform .6s var(--expo); }
-.cartao { transition: transform .25s ease-out; }
+.cartao { transition: transform .5s var(--mola); }
 .cartao.arrastando { transition: none; }
 #tela.entra .frase, #tela.entra .ficha, #tela.entra .fecho { animation: entrar .7s var(--expo) both; animation-delay: calc(var(--atraso, 0ms) + var(--i, 0) * 60ms); }
 #tela.entra .contagem, #tela.entra .codigo { animation: subir .9s var(--expo) backwards; animation-delay: var(--atraso, 0ms); }
@@ -312,15 +315,22 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
      onde a nova não chega (no computador ela mostra menos da altura da foto que a vitrine), aparece a antiga, que é a mesma imagem. */
   ::view-transition-image-pair(peca) { overflow: clip; }
   ::view-transition-old(peca), ::view-transition-new(peca) { animation: none; mix-blend-mode: normal; top: 50%; translate: 0 -50%; }
-  /* enquanto ela cresce, o lugar dela na tela nova fica no preto da arara e o que vai por cima da foto (topo, pílulas, sombra) espera ela pousar */
+  /* enquanto ela cresce, o lugar dela na tela nova fica no preto da arara e o que vai por cima da foto (topo, pílulas, sombra) espera ela pousar;
+     a peça de baixo (outra roupa) também some, senão apareceria em volta da foto que cresce */
   body.pousando .foto { background: none; }
   .topo, .pilulas, .foto::after { transition: opacity .3s var(--expo); }
-  body.pousando .topo, body.pousando .pilulas, body.pousando .foto::after { opacity: 0; transition: none; } /* some na hora; só a volta é suave */
+  body.pousando .topo, body.pousando .pilulas, body.pousando .foto::after, body.pousando .proxima { opacity: 0; transition: none; } /* some na hora; só a volta é suave */
   /* a vitrine encaixa foto a foto; quando a tela abre sem passagem (#tela.entra), as fotos chegam uma a uma */
   .vitrine { scroll-snap-type: x mandatory; }
   .vitrine-peca { scroll-snap-align: start; }
   #tela.entra .vitrine-peca { animation: entrar .55s var(--expo) both; animation-delay: calc(var(--atraso, 0ms) + var(--i, 0) * 60ms + var(--j) * 70ms); }
+  /* a pilha: a peça seguinte espera menor e no escuro e cresce com o arraste (--puxa, app.js); solto antes do limite, volta junto com o cartão.
+     A peça que sobe continua de onde a de baixo estava (--puxou, app.js): inteira depois do arraste, da pilha depois do "passo" */
+  .proxima { transform: scale(calc(.94 + .06 * var(--puxa, 0))); filter: brightness(calc(.6 + .4 * var(--puxa, 0))); transition: transform .5s var(--mola), filter .5s var(--mola); }
+  .foto:has(.arrastando) .proxima { transition: none; }
+  #tela.entra #peca { animation: da-pilha .5s var(--expo) var(--atraso, 0ms) backwards; }
 }
+@keyframes da-pilha { from { transform: scale(calc(.94 + .06 * var(--puxou, 0))); filter: brightness(calc(.6 + .4 * var(--puxou, 0))); } }
 @keyframes recua { to { transform: translateX(-28%); filter: brightness(.6); } }
 @keyframes volta-da-esquerda { from { transform: translateX(-28%); filter: brightness(.6); } }
 @keyframes entra-da-direita { from { transform: translateX(100%); } }

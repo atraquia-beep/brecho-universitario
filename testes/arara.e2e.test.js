@@ -96,3 +96,15 @@ test('arara: na tela larga a peça fica à esquerda e a folha à direita, sem ro
   await page.getByText('No teclado: ← passa, → é minha.').waitFor();
   await fechar();
 });
+test('arara: a peça seguinte espera atrás da foto; na última não há outra', async () => {
+  const { page, fechar } = await abrir(); await entrar(page);
+  await page.getByRole('button', { name: 'Ver as 5 peças' }).click(); await page.locator('#drop').waitFor();
+  const embaixo = () => page.locator('#drop .foto > img.proxima').evaluateAll(is => is.map(i => i.getAttribute('src')));
+  assert.deepEqual(await embaixo(), ['fotos/sueter-marinho.jpg']);
+  assert.equal(await page.locator('.cartao').evaluate(c => getComputedStyle(c).transitionDuration), '0s'); // com menos movimento, o cartão volta sem a mola
+  for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'passo' }).click();
+  assert.equal(await nomeNaTela(page), 'Camisa branca de manga curta');
+  assert.deepEqual(await embaixo(), []);
+  assert.equal(await page.locator('#peca').evaluate(p => p.getAnimations().length), 0); // e a peça nova não cresce da pilha
+  await fechar();
+});
