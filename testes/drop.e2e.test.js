@@ -1,4 +1,5 @@
 const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar, salvo, aoVivo } = require('./apoio.js');
+const D = require('../dados.js');
 const frase = page => page.locator('#drop .frase').first().innerText();
 test('drop: uma peça por vez, passar e pegar', async () => {
   const { page, passar, fechar } = await abrir({ largura: 360 }); await entrar(page); await aoVivo(page, passar);
@@ -61,6 +62,17 @@ test('a pilha termina antes do tempo', async () => {
   for (let i = 0; i < 14; i++) await page.getByRole('button', { name: 'passo' }).click();
   await page.getByText('O drop acabou. Você não pegou nada desta vez.').waitFor();
   await page.reload(); await page.getByText('O drop acabou.').waitFor();
+  await fechar();
+});
+test('a peça de baixo sai quando outra pessoa leva a que esperava atrás da foto', async () => {
+  const { page, passar, fechar } = await abrir(); await entrar(page); await aoVivo(page, passar);
+  for (let i = 0; i < 12; i++) await page.getByRole('button', { name: 'passo' }).click(); // sobram duas: a da tela e a de baixo
+  const naTela = await frase(page), embaixo = await page.locator('#drop .proxima').getAttribute('src');
+  await passar(8000); await page.getByText('1 de 14 já foram').waitFor();
+  // quem leva tira a última da pilha, que era a de baixo: ela não pode continuar aparecendo atrás do cartão
+  assert.deepEqual((await salvo(page)).drop.levadas.map(id => D.CATALOGO.find(p => p.id === id).foto), [embaixo]);
+  assert.equal(await page.locator('#drop .proxima').count(), 0);
+  assert.equal(await frase(page), naTela);
   await fechar();
 });
 test('retirada depois do drop, com o contador do curso', async () => {

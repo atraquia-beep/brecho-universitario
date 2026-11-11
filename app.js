@@ -1094,6 +1094,8 @@ function tique() {
   // R1: só os nós que mudaram, nunca a tela inteira
   if (sit.tela === 'espera') trocarTexto('contagem', Logica.contagem(sit.faltaMs));
   if (sit.tela !== 'no-ar') return;
+  // quem leva tira a última da pilha: com duas, era a que espera atrás da foto
+  if (pilhaAtual().length < 2) { const q = document.querySelector('#drop .proxima'); if (q) q.remove(); }
   trocarTexto('resta', 'AO VIVO · ' + Logica.relogio(sit.faltaMs));
   trocarTexto('placar', placarTexto());
   const foram = Logica.placar(estado, DADOS.CATALOGO).foram;
