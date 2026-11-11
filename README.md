@@ -5,3 +5,5 @@ Protótipo do Take It, o brechó do campus de Limeira: um brechó entre alunos e
 Site estático (HTML, CSS e JavaScript puros). Para abrir, dois cliques em `index.html` ou o link publicado.
 
 Roteiro de gravação, o que é simulado e como trocar as fotos: [LEIA-ME.md](LEIA-ME.md).
+
+Material para o vídeo explicativo (gravações, desenho e decisões): [docs/](docs/README.md).
