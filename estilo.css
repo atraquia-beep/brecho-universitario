@@ -272,16 +272,16 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
 /* Passagens entre telas: o app.js abre uma View Transition só para quem aceita movimento e marca o sentido em html[data-passagem].
    A, porta lateral, para trocar de lugar: na ida a tela nova entra pela direita e a antiga recua e escurece; na volta, o contrário.
    C, folha, para o que abre por cima e fecha: sobe de baixo com os cantos de cima redondos e a tela de baixo encolhe e escurece; desce mais rápido.
-   Entrar segue a curva do Velvet; sair acelera. O topo vai junto com a tela: parado, o cabide piscava entre uma tela escura e uma clara.
+   Tudo parte no toque, na curva do Velvet; voltar e descer só duram menos. O topo vai junto com a tela: parado, o cabide piscava entre uma tela escura e uma clara.
    A barra de baixo fica parada; quando só uma das telas tem barra, ela desce ou sobe. (Durante a passagem a entrada escalonada não liga: app.js.) */
 @media (prefers-reduced-motion: no-preference) {
   #abas { view-transition-name: abas; }
   html[data-passagem] body { transition: none; } /* a tela nova já chega com a cor dela */
   ::view-transition { background: #000; } /* em volta da tela que encolhe */
   ::view-transition-group(*) { animation-duration: .42s; animation-timing-function: var(--expo); }
-  html[data-passagem=volta]::view-transition-group(*) { animation-duration: .38s; animation-timing-function: cubic-bezier(.7, 0, .84, 0); }
+  html[data-passagem=volta]::view-transition-group(*) { animation-duration: .38s; }
   html[data-passagem=sobe]::view-transition-group(*) { animation-duration: .5s; }
-  html[data-passagem=desce]::view-transition-group(*) { animation-duration: .36s; animation-timing-function: cubic-bezier(.7, 0, .84, 0); }
+  html[data-passagem=desce]::view-transition-group(*) { animation-duration: .36s; }
   ::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; }
   html[data-passagem=ida]::view-transition-old(root) { animation-name: recua; }
   html[data-passagem=ida]::view-transition-new(root) { animation-name: entra-da-direita; }

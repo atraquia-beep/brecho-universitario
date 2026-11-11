@@ -8,6 +8,15 @@ const verPecas = page => page.getByRole('button', { name: /^Ver as \d+ peças/ }
 const nomeDoTopo = page => page.locator('.topo').evaluate(e => getComputedStyle(e).viewTransitionName);
 // a entrada escalonada de #tela que ainda roda: a tela inteira já se moveu, então depois de uma passagem não sobra nenhuma
 const entrando = page => page.evaluate(() => document.getAnimations().filter(a => a instanceof CSSAnimation && a.effect.target.closest('#tela')).map(a => a.animationName));
+// quanto do caminho (da largura ou da altura) a tela de cima já andou com 10% do tempo da passagem
+const andouNoComeco = page => page.waitForFunction(() => document.getAnimations().some(a => a.effect && a.effect.pseudoElement === '::view-transition-old(root)'))
+  .then(() => page.evaluate(() => {
+    const a = document.getAnimations().find(a => a.effect.pseudoElement === '::view-transition-old(root)');
+    a.pause(); a.currentTime = a.effect.getComputedTiming().duration * .1;
+    const m = new DOMMatrix(getComputedStyle(document.documentElement, '::view-transition-old(root)').transform);
+    a.play();
+    return Math.max(m.m41 / innerWidth, m.m42 / innerHeight);
+  }));
 
 // com movimento: entra e espera a abertura sair
 async function comMovimento(opcoes) {
@@ -123,4 +132,39 @@ test('barra que volta fora de uma passagem sobe de baixo; dentro dela, sobe com 
   await marcar(null); // o fim da passagem não faz a barra subir de novo
   assert.equal(await page.locator('#abas').evaluate(e => e.getAnimations().length), 0);
   await fechar();
+});
+
+test('volta e desce partem na hora do toque', async () => {
+  const { page, fechar } = await comMovimento();
+  await verPecas(page).click(); await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+  await page.locator('#marca').click();
+  const volta = await andouNoComeco(page);
+  assert.ok(volta > .25, 'volta: ' + volta);
+  await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
+  await page.getByRole('button', { name: 'Fotografar' }).waitFor(); await fimDaPassagem(page);
+  await page.locator('#marca').click();
+  const desce = await andouNoComeco(page);
+  assert.ok(desce > .25, 'desce: ' + desce);
+  await page.locator('.contagem').waitFor(); await fimDaPassagem(page);
+  await fechar();
+});
+
+test('É minha: com passagem, a folha que sobe é o retorno e só o passar solta o fantasma; sem a API, o fantasma voa como antes', async () => {
+  for (const semApi of [false, true]) {
+    const { page, fechar } = await comMovimento(semApi ? { antes: () => { delete Document.prototype.startViewTransition; } } : {});
+    await verPecas(page).click(); await page.locator('#drop').waitFor(); await fimDaPassagem(page);
+    // o lado de cada fantasma que sai da foto
+    await page.evaluate(() => {
+      window.__fantasmas = [];
+      new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.classList && n.classList.contains('fantasma')) window.__fantasmas.push(n.classList[1]); })))
+        .observe(document.body, { childList: true, subtree: true });
+    });
+    await page.getByRole('button', { name: 'passo' }).click();
+    await page.getByRole('button', { name: 'É minha' }).click();
+    assert.equal(await sentido(page), semApi ? '' : 'sobe');
+    await page.locator('.codigo').waitFor(); await fimDaPassagem(page);
+    assert.deepEqual(await page.evaluate(() => window.__fantasmas), semApi ? ['esquerda', 'direita'] : ['esquerda']);
+    await fechar();
+  }
 });

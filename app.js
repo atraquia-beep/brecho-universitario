@@ -481,7 +481,7 @@ function passarPeca() {
 }
 function pegarPeca() {
   const peca = pecaNaTela;
-  fantasma('direita');
+  if (!passagemAnima()) fantasma('direita'); // com a passagem, a folha de "é sua" subindo já responde ao toque
   // reservar devolve o mesmo estado se a peça já é sua: o toque duplo não cria outra reserva. Peça da arara não pertence a drop nenhum
   // (pela peça e não pela rota: no segundo toque o endereço já é #/sua/…).
   guardar(Logica.reservar(estado, peca, Logica.janelasDeRetirada(new Date())[0], Logica.gerarCodigo(), daArara(peca.id) ? null : estado.drop.inicio));
@@ -952,9 +952,10 @@ function desenhar() {
 // Troca de tela com movimento: o sentido (Logica.passagem) fica em <html data-passagem> enquanto a View Transition roda, e o estilo.css anima.
 // Sem sentido, sem a API ou para quem pede menos movimento, troca na hora, como sempre.
 let transicao = null; // a View Transition em curso
+const passagemAnima = () => !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function trocar(passagem, fazer) {
-  if (!passagem || !document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { fazer(); return; }
+  if (!passagem || !passagemAnima()) { fazer(); return; }
   if (transicao) transicao.skipTransition(); // um toque no meio: a passagem de antes acaba na hora e a nova parte dali
   const html = document.documentElement;
   html.dataset.passagem = passagem;
