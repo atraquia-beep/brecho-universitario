@@ -23,7 +23,7 @@ test('tabelas', () => {
   assert.ok(D.OCASIOES.festa.includes('jaqueta jeans'));
   assert.deepEqual(D.PALPITES[0], { tipo: 'jaqueta jeans', estado: 'pouco uso' });
   assert.equal(D.CORES.length, 5); assert.equal(D.CORES[0].hex, '#FF0000'); assert.equal(D.CONTADOR_BASE, 128); assert.equal(D.COMISSAO, 0.10);
-  assert.deepEqual(D.DROP, { dias: [1, 3], hora: 20, duracaoMs: 600000, ensaioMs: 10000, levaACadaMs: 8000, vendaAposMs: 5000, online: 23, esperando: 38 });
+  assert.deepEqual(D.DROP, { dias: [1, 3], hora: 20, duracaoMs: 600000, ensaioMs: 10000, levaACadaMs: 8000, vendaAposMs: 5000, online: 23 });
 });
 test('distribuição que o roteiro precisa', () => {
   const de = t => D.CATALOGO.filter(p => p.tamanho === t).length;

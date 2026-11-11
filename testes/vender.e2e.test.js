@@ -1,6 +1,6 @@
 const test = require('node:test'); const assert = require('node:assert/strict'); const path = require('node:path'); const { abrir, entrar, salvo, aoVivo } = require('./apoio.js');
 async function ateOPalpite(page, passar) {
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByText('Sem câmera aqui: usei uma peça de exemplo.').waitFor();
   await page.getByRole('button', { name: 'Fotografar' }).click();
   await page.getByText('Olhando…').waitFor(); await passar(1200);
@@ -23,12 +23,12 @@ test('vender sem câmera: 19 segundos e a peça entra no próximo drop', async (
   const s = await salvo(page); assert.equal(s.ultimoAnuncioSeg, 19);
   assert.deepEqual([s.anuncios[0].preco, s.anuncios[0].tamanho, s.anuncios[0].receber, s.anuncios[0].foto, s.anuncios[0].vendida], [35, 'M', 'creditos', 'fotos/exemplo-venda.jpg', false]);
   await page.getByRole('button', { name: 'Voltar' }).click(); await page.getByText('Próximo drop · quarta, 20h').waitFor();
-  await page.getByText('Deco, catorze peças entram juntas.', { exact: false }).waitFor(); // a própria peça não entra na pilha
+  await page.getByText('Catorze peças novas entram juntas', { exact: false }).waitFor(); // a própria peça não entra na pilha
   await fechar();
 });
 test('cronômetro, tamanho do perfil, palavras que refazem o preço e Pix', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page, { tamanho: 'G' });
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.locator('#cronometro').waitFor(); // a rota abre antes de o relógio andar
   await passar(3000); assert.equal(await page.locator('#cronometro').innerText(), '00:03');
   await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(1200);
@@ -46,7 +46,7 @@ test('cronômetro, tamanho do perfil, palavras que refazem o preço e Pix', asyn
 });
 test('com câmera: visor ao vivo, foto reduzida e câmera desligada depois', async () => {
   const { page, passar, fechar } = await abrir({ camera: true }); await entrar(page);
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.locator('video#visor').waitFor();
   assert.equal(await page.getByText('Sem câmera aqui').count(), 0);
   await page.waitForFunction(() => document.querySelector('#visor').videoWidth > 0);
@@ -60,7 +60,7 @@ test('com câmera: visor ao vivo, foto reduzida e câmera desligada depois', asy
 });
 test('foto da galeria é reduzida; arquivo que não é imagem vira frase', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page);
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.setInputFiles('#foto-entrada', { name: 'nota.txt', mimeType: 'text/plain', buffer: Buffer.from('oi') });
   await page.getByText('Não consegui abrir essa foto. Tente outra ou use a peça de exemplo.').waitFor();
   await page.setInputFiles('#foto-entrada', path.join(__dirname, '..', 'fotos', 'exemplo-venda.jpg'));
@@ -128,7 +128,7 @@ test('anúncio feito durante o drop espera o próximo', async () => {
 });
 test('o visor ocupa a tela e os controles cabem sem rolar', async () => {
   const { page, fechar } = await abrir({ largura: 360, altura: 640 }); await entrar(page);
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByText('Sem câmera aqui: usei uma peça de exemplo.').waitFor();
   const alto = await page.evaluate(() => innerHeight);
   const visor = await page.locator('#visor').boundingBox();
@@ -141,7 +141,7 @@ test('o visor ocupa a tela e os controles cabem sem rolar', async () => {
 });
 test('cronômetro conta segundos inteiros e para no número da frase', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page);
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.locator('#cronometro').waitFor();
   await passar(200); assert.equal(await page.locator('#cronometro').innerText(), '00:00');
   await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(1200);
@@ -165,7 +165,7 @@ test('a peça de exemplo sempre ganha o palpite da jaqueta', async () => {
 test('enquanto a câmera não responde, já dá para escolher uma foto', async () => {
   const { page, passar, fechar } = await abrir({ antes: () => { Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia: () => new Promise(() => {}) } }); } });
   await entrar(page);
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByRole('button', { name: 'escolher uma foto' }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Fotografar' }).count(), 0);
   assert.equal(await page.locator('.canto').count(), 0);

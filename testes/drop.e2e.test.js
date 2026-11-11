@@ -69,7 +69,7 @@ test('retirada depois do drop, com o contador do curso', async () => {
   await page.getByText('É sua. A jaqueta jeans da Ana espera você terça, das 12h às 13h, no ponto da FCA. Mostre este código:').waitFor();
   await page.locator('#marca').click(); await page.locator('#drop').waitFor();
   await passar(600000); await page.getByRole('button', { name: 'Voltar' }).click();
-  await page.getByText('Deco, treze peças entram juntas. Quatro são M, na sua pegada.').waitFor();
+  await page.getByText('Treze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Seis são M.').waitFor();
   await page.getByRole('link', { name: /^Sua jaqueta jeans espera você terça, das 12h às 13h\. Código [A-HJKMNP-Z2-9]{4}\.$/ }).click();
   await page.getByRole('button', { name: 'Já retirei' }).click();
   await page.getByText('Como foi com a Ana?').waitFor();

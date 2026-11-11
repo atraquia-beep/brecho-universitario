@@ -54,6 +54,6 @@ const DADOS = {
   CONTADOR_BASE: 128,
   COMISSAO: 0.10,
   PERFIL_PADRAO: { nome: '', tamanho: 'M', pegadas: ['básico'], teto: 40, curso: 'Administração', email: '' },
-  DROP: { dias: [1, 3], hora: 20, duracaoMs: 600000, ensaioMs: 10000, levaACadaMs: 8000, vendaAposMs: 5000, online: 23, esperando: 38 }
+  DROP: { dias: [1, 3], hora: 20, duracaoMs: 600000, ensaioMs: 10000, levaACadaMs: 8000, vendaAposMs: 5000, online: 23 }
 };
 if (typeof module !== 'undefined') module.exports = DADOS;

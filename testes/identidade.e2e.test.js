@@ -47,7 +47,7 @@ test('pontuação nunca cai sozinha na linha de baixo', async () => {
     await page.getByRole('button', { name: /^Curso:/ }).click(); await page.getByRole('button', { name: longo, exact: true }).click();
     await confere('perfil');
     await entrar(page);
-    await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+    await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
     await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(1200);
     await page.getByRole('button', { name: 'Anunciar no drop' }).waitFor();
     await confere('palpite');

@@ -27,13 +27,9 @@ function aplicarRealce() {
 }
 
 function atualizarConta() {
-  const conta = document.getElementById('conta'), arara = document.getElementById('ir-arara');
-  conta.hidden = arara.hidden = !estado.perfil || !!venda; // em #/vender o cronômetro ocupa o lugar
+  const conta = document.getElementById('conta');
+  conta.hidden = !estado.perfil || !!venda; // em #/vender o cronômetro ocupa o lugar
   conta.textContent = estado.perfil ? estado.perfil.nome : '';
-  // o número da arara acompanha as reservas: toda mudança de estado passa por aqui (guardar)
-  const n = estado.perfil ? pilhaDaArara(true).length : 0;
-  arara.lastChild.textContent = n || '';
-  arara.setAttribute('aria-label', n ? 'Arara, ' + n + (n === 1 ? ' peça' : ' peças') : 'Arara');
 }
 
 // troca o estado e grava, sem reconstruir a tela (o tique usa esta)
@@ -366,7 +362,7 @@ const feminina = peca => DADOS.TIPOS[peca.tipo].genero === 'f';
 const pecaPorId = id => DADOS.CATALOGO.concat(DADOS.ARARA).find(p => p.id === id);
 const daArara = id => DADOS.ARARA.some(p => p.id === id);
 
-// nós que ficam acima do rótulo: reservas por retirar
+// nós que abrem a tela de início: reservas por retirar
 function avisosDaEspera() {
   const nos = [];
   estado.reservas.filter(r => !r.retirada).forEach(r => {
@@ -383,7 +379,7 @@ function avisosDaEspera() {
 const maiuscula = t => t.charAt(0).toUpperCase() + t.slice(1);
 const focavel = el => { el.tabIndex = -1; return el; };
 
-// os dois "ensaiar o drop agora": fecha o drop que ainda não foi fechado (no ar ou no fim) e ensaia
+// os dois "ver um drop de teste agora" (início e Você): fecha o drop que ainda não foi fechado (no ar ou no fim) e ensaia
 function ensaiarAgora() {
   guardar(Logica.ensaiar(estado.drop && !estado.drop.fechado ? Logica.fecharDrop(estado) : estado, Date.now()));
   if (rotaAtual() !== '') { location.hash = '#/'; return; }
@@ -391,50 +387,62 @@ function ensaiarAgora() {
   const rotulo = document.getElementById('rotulo');
   if (rotulo) rotulo.focus();
 }
+const botaoDoTeste = () => botaoPalavra('ver um drop de teste agora (' + DADOS.DROP.ensaioMs / 1000 + ' s)', ensaiarAgora);
 
+// as peças à venda, lado a lado; qualquer foto abre a arara do começo
+function vitrine(pecas) {
+  const fila = el('div', { className: 'vitrine' });
+  pecas.forEach(p => {
+    const img = el('img', { src: p.foto, alt: '' });
+    img.dataset.peca = p.id;
+    const foto = el('span', { className: 'vitrine-foto' });
+    foto.append(img, el('span', { className: 'etiqueta', textContent: Logica.dinheiro(p.preco) }));
+    const a = el('a', { className: 'vitrine-peca', href: '#/arara' });
+    a.append(foto, el('span', { className: 'vitrine-nome apoio', textContent: maiuscula(p.tipo) + ' · ' + p.tamanho }));
+    fila.appendChild(a);
+  });
+  return fila;
+}
+
+// Primeiro o que dá para comprar já (no computador, o painel); depois o drop, com os números gigantes (o palco)
 function telaEspera(sit) {
   const perfil = estado.perfil;
   const pilha = pilhaAtual();
-  const servem = pilha.filter(p => Logica.serve(p, perfil)).length;
-  const total = pilha.length;
-  const tamanho = Object.assign(document.createElement('a'), { className: 'palavra', href: '#/voce', textContent: perfil.tamanho });
-  const rotulo = focavel(apoio(sit.ensaio ? 'Ensaio do drop' : 'Próximo drop · ' + Logica.diaDaSemana(sit.inicio) + ', ' + DADOS.DROP.hora + 'h'));
-  rotulo.id = 'rotulo';
-  rotulo.classList.add('lab');
+  const arara = pilhaDaArara(true), n = arara.length;
+  const ficha = el('p', { className: 'ficha lab' });
+  ficha.appendChild(el('span', { textContent: 'À venda agora' }));
+  if (n) ficha.appendChild(el('span', { textContent: n + (n === 1 ? ' peça' : ' peças') }));
+  const aVenda = n ? [
+    frase('Roupa de quem estuda aqui. Gostou, toque em ', el('span', { className: 'amostra', textContent: 'É minha' }), ' e ela é sua.'),
+    vitrine(arara),
+    principal(n === 1 ? 'Ver a peça' : 'Ver as ' + n + ' peças', () => { location.hash = '#/arara'; }),
+  ] : [frase('Nada à venda agora. As próximas peças entram no drop.')];
+  const rotulo = focavel(el('p', { id: 'rotulo', className: 'ficha lab' }));
+  rotulo.append(el('span', { textContent: sit.ensaio ? 'Drop de teste' : 'Próximo drop · ' + Logica.diaDaSemana(sit.inicio) + ', ' + DADOS.DROP.hora + 'h' }),
+    el('span', { textContent: 'faltam' }));
   const contagem = document.createElement('p');
   contagem.id = 'contagem';
   contagem.className = 'contagem';
   contagem.textContent = Logica.contagem(sit.faltaMs);
-  const entram = perfil.nome + ', ' + (total === 1 ? 'uma peça entra sozinha' : Logica.extenso(total, 'f') + ' peças entram juntas') + '.';
-  const fraseTamanho = servem === 0
-    ? frase(entram + ' Nenhuma é ', tamanho, ' na sua pegada desta vez, mas vale olhar.')
-    : frase(entram + ' ' + maiuscula(Logica.extenso(servem, 'f')) + (servem === 1 ? ' é ' : ' são '), tamanho, ', na sua pegada.');
-  const fotos = document.createElement('div');
-  fotos.className = 'teaser';
-  pilha.slice(0, 3).forEach(p => {
-    const img = document.createElement('img');
-    img.src = p.foto;
-    img.alt = '';
-    img.setAttribute('aria-hidden', 'true');
-    fotos.appendChild(img);
-  });
-  const legenda = document.createElement('span');
-  legenda.textContent = 'só abre na hora';
-  fotos.appendChild(legenda);
+  // conta só o tamanho: "sete são M" é verdade ao pé da letra
+  const total = pilha.length, doTamanho = pilha.filter(p => p.tamanho === perfil.tamanho).length;
+  const tamanho = Object.assign(document.createElement('a'), { className: 'palavra', href: '#/voce', textContent: perfil.tamanho });
+  const entram = (total === 1 ? 'Uma peça nova entra sozinha' : maiuscula(Logica.extenso(total, 'f')) + ' peças novas entram juntas')
+    + ', só por ' + DADOS.DROP.duracaoMs / 60000 + ' minutos. Quem tocar primeiro leva. ';
+  const fraseDoDrop = doTamanho === 0
+    ? frase(entram + 'Nenhuma é ', tamanho, ' desta vez.')
+    : frase(entram + maiuscula(Logica.extenso(doTamanho, 'f')) + (doTamanho === 1 ? ' é ' : ' são '), tamanho, '.');
   let acordar;
   if (estado.acordar) {
-    acordar = focavel(frase('Combinado. Eu te acordo cinco minutos antes.'));
-    acordar.id = 'combinado';
+    acordar = focavel(el('span', { id: 'combinado', textContent: 'Combinado. Te aviso cinco minutos antes.' }));
   } else {
-    acordar = principal('Me acorde cinco minutos antes', () => { mudar(Logica.pedirParaAcordar(estado)); document.getElementById('combinado').focus(); });
+    acordar = botaoPalavra('Me avise antes', () => { mudar(Logica.pedirParaAcordar(estado)); document.getElementById('combinado').focus(); });
   }
-  acordar.classList.add('final');
-  const vender = Object.assign(document.createElement('a'), { className: 'palavra', href: '#/vender', textContent: 'vender uma peça para este drop' });
-  const ensaiar = botaoPalavra('ensaiar o drop agora', ensaiarAgora);
+  const atalhos = el('p', { className: 'atalhos' });
+  atalhos.append(acordar, botaoDoTeste());
   return [
-    lado('palco', ...avisosDaEspera(), rotulo, contagem, regua(), fraseTamanho, frase('Cada peça é única. Quem tocar primeiro leva.')),
-    lado('painel', fotos),
-    lado('pe', acordar, apoio(DADOS.DROP.esperando + ' alunos esperando · ', vender, ' · ', ensaiar)),
+    lado('painel', ...avisosDaEspera(), ficha, ...aVenda),
+    lado('palco', rotulo, contagem, regua(), fraseDoDrop, atalhos),
   ];
 }
 
@@ -474,8 +482,9 @@ function passarPeca() {
 function pegarPeca() {
   const peca = pecaNaTela;
   fantasma('direita');
-  // reservar devolve o mesmo estado se a peça já é sua: o toque duplo não cria outra reserva. Peça da arara não pertence a drop nenhum.
-  guardar(Logica.reservar(estado, peca, Logica.janelasDeRetirada(new Date())[0], Logica.gerarCodigo(), rotaAtual() === 'arara' ? null : estado.drop.inicio));
+  // reservar devolve o mesmo estado se a peça já é sua: o toque duplo não cria outra reserva. Peça da arara não pertence a drop nenhum
+  // (pela peça e não pela rota: no segundo toque o endereço já é #/sua/…).
+  guardar(Logica.reservar(estado, peca, Logica.janelasDeRetirada(new Date())[0], Logica.gerarCodigo(), daArara(peca.id) ? null : estado.drop.inicio));
   location.hash = '#/sua/' + peca.id;
 }
 
@@ -569,7 +578,7 @@ function telaFim() {
   return [lado('palco',
     frase('O drop acabou. ' + (n ? 'Você ficou com ' + Logica.extenso(n, 'f') + (n === 1 ? ' peça.' : ' peças.') : 'Você não pegou nada desta vez.')),
     frase('Próximo drop: ' + Logica.diaDaSemana(proximo) + ', ' + DADOS.DROP.hora + 'h.'),
-    frase('Enquanto isso, a ', linkDaArara(), ' continua aberta.'),
+    frase('Enquanto isso, ', linkDaArara(), ' continuam lá.'),
     principal('Voltar', () => mudar(Logica.fecharDrop(estado))))];
 }
 
@@ -577,7 +586,7 @@ function telaFim() {
 // Aberta o tempo todo: uma peça por vez, como no drop, sem relógio e sem ninguém levando nada.
 let araraPassadas = []; // passadas nesta visita; zeram com "olhar de novo", ao recarregar e ao chegar de outra tela que não "é sua"
 const pilhaDaArara = todas => Logica.ordenarPilha(DADOS.ARARA, estado.perfil, null, Logica.indisponiveis(estado).concat(todas ? [] : araraPassadas));
-const linkDaArara = () => el('a', { className: 'palavra', href: '#/arara', textContent: 'arara' });
+const linkDaArara = () => el('a', { className: 'palavra', href: '#/arara', textContent: 'as peças à venda' });
 
 function telaArara() {
   const pilha = pilhaDaArara();
@@ -591,7 +600,7 @@ function telaArara() {
   }
   return [secaoDaPeca('Arara', pilha[0], pilha[1],
     [el('span', { className: 'pilula', textContent: 'Arara · sempre aberta' }), el('span', { className: 'pilula', textContent: pilha.length + (pilha.length === 1 ? ' peça' : ' peças') })],
-    [], [apoio(el('a', { className: 'palavra', href: '#/', textContent: 'voltar' }))])];
+    [], [])];
 }
 
 function telaPrincipal() {
@@ -841,7 +850,7 @@ function telaVoce() {
       rotulo('Suas reservas'), ...(reservas.length ? reservas : [frase('Nenhuma reserva por enquanto.')]),
       ...(estado.ultimoAnuncioSeg != null ? [frase('Seu último anúncio levou ' + estado.ultimoAnuncioSeg + ' s.')] : [])),
     // no celular a cor vem depois das reservas, como sempre foi; no computador fica embaixo do perfil
-    lado('pe', frase('A cor do seu brechó é ', amostra, '.'), apoio(botaoPalavra('ensaiar o drop agora', ensaiarAgora)), ...fim),
+    lado('pe', frase('A cor do seu brechó é ', amostra, '.'), apoio(botaoDoTeste()), ...fim),
   ];
 }
 

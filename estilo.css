@@ -39,17 +39,6 @@ body {
   min-width: 44px; margin: -13px 0 -13px auto; padding: 13px 0;
   font-size: 13px; font-weight: 400; line-height: 1.45; letter-spacing: 0; text-align: right; color: var(--apoio); text-decoration: none;
 }
-/* a arara a um toque, no canto de cima; sai na câmera e nas telas de foto (o drop e a própria arara) */
-#ir-arara {
-  margin-left: 14px; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px;
-  border: 1px solid currentColor; border-radius: 999px; color: var(--tinta);
-  font-size: 13px; font-weight: 500; line-height: 1; letter-spacing: 0; text-decoration: none;
-}
-#ir-arara span {
-  min-width: 20px; height: 20px; margin-right: -7px; padding: 0 6px; border-radius: 10px;
-  background: var(--tinta); color: var(--fundo); font-size: 12px; line-height: 20px; text-align: center;
-}
-#ir-arara span:empty, body.ao-vivo #ir-arara { display: none; }
 #tela { flex: 1; display: flex; flex-direction: column; }
 
 /* Barra de baixo: Comprar, Vender e Você, na luz da tela.
@@ -92,7 +81,7 @@ p { margin: 0 0 16px; }
   .principal:hover { color: #000; }
   .principal:hover::before { transform: scaleX(1); }
 }
-.amostra { background: linear-gradient(transparent 58%, var(--cor) 58%); }
+.amostra { white-space: nowrap; background: linear-gradient(transparent 58%, var(--cor) 58%); }
 .opcoes { display: flex; flex-wrap: wrap; gap: 2px 20px; margin: -6px 0 18px; font-size: 18px; line-height: 1.4; }
 .opcoes button { padding: 5px 0; }
 .opcoes [aria-pressed="true"], .opcoes [aria-current="true"] { font-weight: 700; background: linear-gradient(transparent 62%, var(--realce) 62%); }
@@ -111,7 +100,8 @@ p { margin: 0 0 16px; }
 .titulo, .contagem, .codigo { margin: 10px 0 0; font-weight: 700; line-height: .8; letter-spacing: -.035em; white-space: nowrap; }
 /* o app.js acerta o tamanho do nome na medida da coluna (encaixar); este é só o ponto de partida */
 .titulo { font-size: calc(var(--coluna) / 2.5); margin-top: 22px; }
-.contagem { font-size: calc(var(--coluna) / 4.15); font-variant-numeric: tabular-nums; }
+/* no celular a contagem cabe com folga, sem tomar a tela das peças à venda; na tela larga volta a ocupar o palco */
+.contagem { font-size: calc(var(--coluna) / 6.5); font-variant-numeric: tabular-nums; }
 .codigo { font-size: calc(var(--coluna) / 3.9); }
 .letra { display: inline-block; white-space: pre; }
 .regua { display: block; flex: none; height: 3px; margin: 12px 0 14px; background: currentColor; transform-origin: 0 50%; }
@@ -143,22 +133,29 @@ p { margin: 0 0 16px; }
 .pilula { font-size: 11px; font-weight: 500; line-height: 1.2; text-transform: uppercase; letter-spacing: .04em; color: var(--creme); background: rgba(0, 0, 0, .82); padding: 6px 10px; border-radius: 99px; }
 .etiqueta { background: var(--creme); color: #000; padding: 6px 11px; font-size: 16px; line-height: 1.2; }
 
-/* Espera */
-.teaser { position: relative; height: 150px; margin: 6px 0 0; flex: none; }
-.teaser img { position: absolute; width: 37%; height: 132px; object-fit: cover; filter: blur(7px) saturate(.9); opacity: .85; }
-.teaser img:nth-child(1) { left: 0; top: 8px; transform: rotate(-6deg); }
-.teaser img:nth-child(2) { left: 30%; top: 0; transform: rotate(3deg); }
-.teaser img:nth-child(3) { left: 60%; top: 10px; transform: rotate(-3deg); }
-.teaser span { position: absolute; left: 0; right: 0; top: 52px; width: max-content; margin: 0 auto; padding: 6px 10px; border-radius: 99px; background: rgba(0, 0, 0, .82); font-size: 11px; font-weight: 500; line-height: 1.2; text-transform: uppercase; letter-spacing: .04em; color: var(--creme); }
-/* tela baixa (celular com as barras do navegador à mostra): o teaser e o botão encolhem para as ações caberem na tela */
+/* Início: as duas fichas ficam rentes ao que nomeiam; no celular o rótulo do drop desgruda do botão de cima */
+.painel > .ficha { margin-bottom: 14px; }
+#rotulo { margin: 10px 0 0; }
+/* as peças à venda numa fila que rola para o lado; no celular a fila passa da borda direita sem alargar a página, e a foto acompanha a largura:
+   duas fotos e meia ocupam o que se vê da fila (a coluna e os 24 px até a borda, menos os dois vãos), e a terceira cortada diz que tem mais */
+.vitrine { --foto: calc((var(--coluna) + 24px - 2 * 16px) / 2.5); flex: none; display: flex; gap: 16px; margin: 0 -24px 10px 0; padding-right: 24px; overflow-x: auto; scrollbar-width: none; }
+.vitrine::-webkit-scrollbar { display: none; }
+.vitrine-peca { flex: none; width: var(--foto); color: inherit; text-decoration: none; }
+/* a fila recorta o que passa dela: o contorno do foco fica por dentro */
+.vitrine-peca:focus-visible { outline-offset: -2px; }
+.vitrine-foto { position: relative; display: block; height: calc(var(--foto) * 148 / 118); }
+.vitrine-foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vitrine .etiqueta { position: absolute; left: 6px; bottom: 6px; padding: 4px 8px; font-size: 15px; font-weight: 600; }
+.vitrine-nome { display: block; margin-top: 6px; }
+/* um atalho por linha, cada um com 44 px de toque */
+.atalhos { display: flex; flex-direction: column; align-items: flex-start; font-size: 17px; }
+.atalhos > * { display: flex; align-items: center; min-height: 44px; }
+/* tela baixa (celular com as barras do navegador à mostra): o botão e a régua encolhem para a primeira dobra mostrar mais */
 @media (max-height: 700px) and (max-width: 899px) {
-  /* celular baixo: as peças borradas saem para a frase da arara caber e as ações da espera caberem na tela */
-  .teaser { display: none; }
   .principal { min-height: 46px; }
   .regua { margin: 10px 0 12px; }
 }
 .final { margin-top: auto; }
-.principal.final { margin-bottom: 10px; }
 p.final { margin-bottom: 8px; }
 
 /* Drop no ar: a foto ocupa a tela, a folha preta fica embaixo; o topo segue clicável sobre a foto. */
@@ -186,7 +183,6 @@ body.ao-vivo #marca, body.ao-vivo #conta { color: var(--creme); }
 .acoes .palavra { font-size: 20px; padding: 12px 0; }
 .acoes .principal { flex: 1; width: auto; margin: 0 0 0 22px; min-height: 58px; font-size: 20px; }
 .barra { display: flex; gap: 5px; margin: 16px 0 8px; }
-.acoes + .apoio { margin-top: 14px; } /* na arara não há barra: o "voltar" desgruda do botão */
 .barra i { flex: 1; height: 3px; background: #3A3532; }
 .barra i.f { background: var(--creme); }
 #aviso { position: absolute; left: 16px; right: 16px; bottom: 100%; margin-bottom: 14px; background: var(--creme); color: #000; padding: 10px 12px; font-size: 17px; line-height: 1.25; }
@@ -284,8 +280,7 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   body { max-width: 1440px; padding: 30px 40px; font-size: 24px; }
   .largo { display: block; }
   #marca svg { width: 44px; height: 34px; }
-  #conta, #ir-arara, .apoio { font-size: 14px; }
-  #ir-arara { min-height: 36px; }
+  #conta, .apoio { font-size: 14px; }
   .lab { font-size: 12px; }
   .principal { min-height: 62px; font-size: 19px; padding: 0 20px; }
   .opcoes { font-size: 20px; }
@@ -316,13 +311,12 @@ body { transition: background-color .7s var(--expo), color .7s var(--expo); }
   .visto { width: 72px; height: 88px; }
   .confere .digito { transform: translateX(calc(var(--n) * -82px)); }
 
-  /* Espera: as peças borradas ocupam o painel */
-  .teaser { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; }
-  .teaser img { width: 46%; height: 60%; filter: blur(12px) saturate(.9); }
-  .teaser img:nth-child(1) { left: 0; top: 16%; }
-  .teaser img:nth-child(2) { left: 27%; top: 6%; }
-  .teaser img:nth-child(3) { left: 54%; top: 22%; }
-  .teaser span { top: 44%; }
+  /* Início: a contagem ocupa o palco e o rótulo alinha com o do painel; a vitrine fica no painel, com fotos maiores, e para na borda da coluna */
+  .contagem { font-size: calc(var(--coluna) / 4.15); }
+  #rotulo { margin-top: 0; }
+  .vitrine { margin-right: 0; padding-right: 0; }
+  .vitrine-peca { width: 200px; }
+  .vitrine-foto { height: 250px; }
 
   /* Drop no ar: a foto à esquerda, a folha à direita, na janela inteira */
   #drop { max-width: none; flex-direction: row; }

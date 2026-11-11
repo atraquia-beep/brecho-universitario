@@ -30,7 +30,7 @@ test('o drop abre com a cortina "AO VIVO", que sai sozinha e não trava o drop',
   const { page, passar, fechar } = await abrir({ movimento: 'no-preference' });
   await page.locator('#abertura').click();
   await entrar(page);
-  await page.getByRole('button', { name: 'ensaiar o drop agora' }).click(); await passar(10000);
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click(); await passar(10000);
   const c = page.locator('#ao-vivo'); await c.waitFor();
   assert.equal(await c.locator('.ab-marca').getAttribute('aria-label'), 'AO VIVO');
   await page.locator('#drop').waitFor(); // o drop já está por baixo
@@ -58,7 +58,7 @@ test('abertura: sem o aviso de fim da animação, a reserva de 5 s libera a tela
 test('recarregar nos últimos segundos do ensaio não põe "AO VIVO" sobre a abertura', async () => {
   const { page, passar, fechar } = await abrir({ movimento: 'no-preference' });
   await page.locator('#abertura').click(); await entrar(page);
-  await page.getByRole('button', { name: 'ensaiar o drop agora' }).click(); await passar(8000);
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click(); await passar(8000);
   await page.reload(); await page.locator('#abertura').waitFor(); await semAnimar(page);
   await passar(2400); await page.locator('#drop').waitFor({ state: 'attached' });
   assert.equal(await page.locator('#ao-vivo').count(), 0); assert.equal(await page.locator('#abertura').count(), 1);

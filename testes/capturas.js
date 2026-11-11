@@ -28,7 +28,7 @@ async function capturar(largura, altura) {
   await foto('primeira-vez');
   await entrar(page);
   await foto('espera');
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByRole('button', { name: 'Fotografar' }).waitFor();
   await foto('vender-visor');
   await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(19000);
@@ -38,7 +38,7 @@ async function capturar(largura, altura) {
   await page.getByText(/^No drop em/).waitFor();
   await foto('publicado');
   await page.getByRole('button', { name: 'Voltar' }).click();
-  await page.getByRole('button', { name: 'ensaiar o drop agora' }).click();
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click();
   await passar(10000);
   await page.locator('#drop').waitFor();
   await foto('drop-no-ar');

@@ -7,10 +7,10 @@ test('mudar o perfil em Você muda a espera', async () => {
   await page.getByText('Você ainda não anunciou nada.').waitFor(); await page.getByText('Nenhuma reserva por enquanto.').waitFor();
   // no celular a ordem de leitura é a de sempre: créditos, peças, reservas, e só então a cor e o ensaio
   const texto = (await page.locator('#tela').innerText()).toLowerCase(), em = t => texto.indexOf(t);
-  assert.ok(em('em créditos') < em('suas peças') && em('nenhuma reserva') < em('a cor do seu brechó') && em('a cor do seu brechó') < em('ensaiar o drop agora'), texto);
+  assert.ok(em('em créditos') < em('suas peças') && em('nenhuma reserva') < em('a cor do seu brechó') && em('a cor do seu brechó') < em('ver um drop de teste agora'), texto);
   await page.getByRole('button', { name: /^Tamanho:/ }).click(); await page.getByRole('button', { name: 'GG', exact: true }).click();
   await page.locator('#marca').click();
-  await page.getByText(/(são|é) GG,? na sua pegada/).waitFor();
+  await page.getByText(/Uma é GG\./).waitFor();
   await fechar();
 });
 test('cor de realce vale na hora e depois de recarregar', async () => {
@@ -26,8 +26,8 @@ test('cor de realce vale na hora e depois de recarregar', async () => {
 test('ensaiar e recomeçar do zero', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page);
   await page.locator('#conta').click();
-  await page.getByRole('button', { name: 'ensaiar o drop agora' }).click();
-  await page.getByText('Ensaio do drop').waitFor(); await passar(10000); await page.locator('#drop').waitFor();
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click();
+  await page.getByText('Drop de teste', { exact: true }).waitFor(); await passar(10000); await page.locator('#drop').waitFor();
   await page.locator('#conta').click();
   await page.getByRole('button', { name: 'Recomeçar do zero' }).click();
   await page.getByText('Apagar tudo e começar de novo?').waitFor();
@@ -45,7 +45,7 @@ test('movimento existe e respeita quem pede menos movimento', async () => {
 test('trocar de passo na mesma rota anima; trocar uma palavra no mesmo passo, não', async () => {
   const { page, passar, fechar } = await abrir({ movimento: 'no-preference' }); await entrar(page);
   const nome = () => page.evaluate(() => getComputedStyle(document.querySelector('.frase')).animationName);
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(1200);
   await page.getByRole('button', { name: 'Anunciar no drop' }).waitFor();
   assert.equal(await nome(), 'entrar');
@@ -59,11 +59,11 @@ test('ensaiar funciona depois do fim e durante outro drop', async () => {
   await aoVivo(page, passar);
   await passar(600000); await page.getByText(/^O drop acabou/).waitFor();
   await page.locator('#conta').click();
-  await page.getByRole('button', { name: 'ensaiar o drop agora' }).click();
-  await page.getByText('Ensaio do drop').waitFor(); await passar(10000); await page.locator('#drop').waitFor();
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click();
+  await page.getByText('Drop de teste', { exact: true }).waitFor(); await passar(10000); await page.locator('#drop').waitFor();
   await page.locator('#conta').click();
-  await page.getByRole('button', { name: 'ensaiar o drop agora' }).click();
-  await page.getByText('Ensaio do drop').waitFor(); await passar(10000); await page.locator('#drop').waitFor();
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click();
+  await page.getByText('Drop de teste', { exact: true }).waitFor(); await passar(10000); await page.locator('#drop').waitFor();
   await fechar();
 });
 test('campo em Você: pontuação colada ao texto, sem cortar', async () => {

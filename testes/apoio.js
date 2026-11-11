@@ -64,9 +64,9 @@ async function entrar(page, perfil = {}) {
 
 const salvo = page => page.evaluate(() => JSON.parse(localStorage['brecho.v2']));
 
-// Toca "ensaiar o drop agora", deixa os 10 segundos passarem e espera o drop no ar.
+// Toca "ver um drop de teste agora", deixa os 10 segundos passarem e espera o drop no ar.
 async function aoVivo(page, passar) {
-  await page.getByRole('button', { name: 'ensaiar o drop agora' }).click();
+  await page.getByRole('button', { name: 'ver um drop de teste agora (10 s)' }).click();
   await passar(10000);
   await page.locator('#drop').waitFor();
 }

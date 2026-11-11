@@ -1,8 +1,9 @@
 const test = require('node:test'); const assert = require('node:assert/strict'); const { abrir, entrar, aoVivo } = require('./apoio.js');
+const FRASE_DO_DROP = 'Catorze peças novas entram juntas, só por 10 minutos. Quem tocar primeiro leva. Sete são M.';
 test('roteiro do vídeo de ponta a ponta', async () => {
   const { page, passar, fechar } = await abrir(); await entrar(page);
-  await page.getByText('Deco, catorze peças entram juntas. Cinco são M, na sua pegada.').waitFor();
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.getByText(FRASE_DO_DROP).waitFor();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByRole('button', { name: 'Fotografar' }).click(); await passar(19000);
   await page.getByRole('button', { name: 'Anunciar no drop' }).click();
   await page.getByText('No drop em 19 segundos. Sua jaqueta jeans entra quarta, às 20h.').waitFor();

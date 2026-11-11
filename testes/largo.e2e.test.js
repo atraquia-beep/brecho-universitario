@@ -40,14 +40,14 @@ test('tela larga: a entrada tem o palco preto à esquerda e o painel creme à di
 });
 test('tela larga: espera, vender, drop, é sua e você, lado a lado e sem rolagem lateral', async () => {
   const { page, passar, fechar } = await abrir({ largura: 1280, altura: 720 }); await entrar(page);
-  // espera: números no palco, peças borradas no painel
+  // espera: números no palco, peças à venda no painel
   let palco = await caixa(page, '.palco');
-  const contagem = await caixa(page, '#contagem'), teaser = await caixa(page, '.teaser');
+  const contagem = await caixa(page, '#contagem'), vitrine = await caixa(page, '.vitrine');
   assert.ok(contagem.d <= palco.d + 1 && contagem.l >= palco.l * .9, 'contagem ocupa o palco');
-  assert.ok(teaser.e >= palco.d && teaser.a > 300, 'peças borradas no painel');
+  assert.ok(vitrine.e >= palco.d && await page.locator('.vitrine').isVisible(), 'peças à venda no painel');
   await semRolagem(page, 'espera', true);
   // vender: o visor é a metade esquerda da janela; as frases ficam no painel
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByText('Fotografe a peça. Eu digo o que é e sugiro o preço.').waitFor();
   await page.getByRole('button', { name: 'Fotografar' }).waitFor(); // o visor é redesenhado quando a câmera responde: mede depois
   const visor = await caixa(page, '.visor');
@@ -89,7 +89,7 @@ test('janela de 1920: no drop e na câmera o topo fica nas bordas da janela, com
   // na espera o corpo continua no meio, com 1440 px
   assert.deepEqual(await bordas(), [280, 280]);
   await semRolagem(page, 'espera 1920', true);
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click();
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click();
   await page.getByRole('button', { name: 'Fotografar' }).waitFor();
   assert.deepEqual(await bordas(), [40, 40]);
   await page.locator('#marca').click(); await aoVivo(page, passar);
@@ -103,10 +103,10 @@ test('celular: os lados não existem, o que é só da tela larga some e a fila s
   assert.equal(await css(page, '.lado', 'display'), 'contents');
   assert.ok(await topo('.fecho') > await topo('.principal'), 'o fecho da capa fica depois do botão');
   await entrar(page);
-  assert.ok(await topo('.teaser') < await topo('.principal'), 'as peças borradas ficam antes do botão');
-  await page.getByRole('link', { name: 'vender uma peça para este drop' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor();
+  assert.ok(await topo('.vitrine') < await topo('#contagem'), 'as peças à venda ficam antes da contagem');
+  await page.locator('#abas').getByRole('link', { name: 'Vender' }).click(); await page.getByRole('button', { name: 'Fotografar' }).waitFor();
   assert.equal(await page.getByText('Fotografe a peça. Eu digo o que é e sugiro o preço.').isVisible(), false);
-  assert.equal(await page.locator('#ir-arara').isVisible(), false); // na câmera o cronômetro ocupa o canto
+  assert.equal(await page.locator('#abas').isVisible(), false); // na câmera a barra sai
   await page.locator('#marca').click();
   await aoVivo(page, passar);
   assert.equal(await page.getByText('No teclado: ← passa, → é minha.').isVisible(), false);
